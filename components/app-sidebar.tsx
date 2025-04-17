@@ -58,7 +58,7 @@ const data = {
       items: [
         {
           title: 'Danh mục chính',
-          url: '/contact',
+          url: '/contacts',
         },
         {
           title: 'Starred',
