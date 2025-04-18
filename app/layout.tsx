@@ -1,3 +1,4 @@
+import { Toaster } from 'sonner'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { SidebarProvider } from '@/components/ui/sidebar'
@@ -33,6 +34,9 @@ export default function RootLayout({
           <AppSidebar />
           {children}
         </SidebarProvider>
+
+        {/* Thêm Toaster vào đây */}
+        <Toaster position="bottom-right" />
       </body>
     </html>
   )

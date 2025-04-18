@@ -1,87 +1,117 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { columns } from './columns'
+import { contacts as initialContacts } from './data'
 import { DataTable } from './data-table'
-import { contacts } from './data'
 import { SidebarInset } from '@/components/ui/sidebar'
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { RefreshCcw } from 'lucide-react'
 import Header from '@/components/PageHeader'
-import { Label } from '@/components/ui/label'
 import AddDialog from '@/components/AddDialog'
+import FilterDialog from '@/components/FilterDialog'
+import FilterRow from '@/components/FilterRow'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import InputExcel from '@/components/InputExcel'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
   { label: 'Danh bạ điện thoại', href: 'contacts' },
-  { label: 'Danh sách liên hệ' }, // Không có href → là trang hiện tại
+  { label: 'Danh sách liên hệ' },
 ]
+
+const filterFields = ['rank', 'position', 'department', 'location'] as const
+
+const initialNewContact = { name: '', rank: '' }
+const initialFilters = { rank: '', position: '', department: '', location: '' }
 
 export default function ContactPage() {
   const [search, setSearch] = useState('')
-  const [locationFilter, setLocationFilter] = useState('')
-  const [departmentFilter, setDepartmentFilter] = useState('')
+  const [filters, setFilters] = useState(initialFilters)
+  const [contacts, setContacts] = useState(initialContacts)
+  const [newContact, setNewContact] = useState(initialNewContact)
 
-  const filteredContacts = contacts
-    .filter((contact) =>
-      [
-        contact.rank,
-        contact.position,
-        contact.manager,
-        contact.department,
-        contact.location,
-        contact.militaryPostalCode,
-      ].some((field) => field.toLowerCase().includes(search.toLowerCase()))
-    )
-    .filter(
-      (contact) =>
-        locationFilter === '' ||
-        locationFilter === 'all' ||
-        contact.location === locationFilter
-    )
-    .filter(
-      (contact) =>
-        departmentFilter === '' ||
-        departmentFilter === 'all' ||
-        contact.department === departmentFilter
-    )
+  const updateState =
+    <T extends object>(setter: React.Dispatch<React.SetStateAction<T>>) =>
+    (field: keyof T, value: string) =>
+      setter((prev) => ({ ...prev, [field]: value }))
 
-  const validLocations = Array.from(
-    new Set(
-      (departmentFilter === '' || departmentFilter === 'all'
-        ? contacts
-        : contacts.filter((contact) => contact.department === departmentFilter)
-      ).map((contact) => contact.location)
-    )
-  )
+  const handleFilterChange = updateState(setFilters)
+  const handleNewContactChange = updateState(setNewContact)
 
-  const validDepartments = Array.from(
-    new Set(
-      (locationFilter === '' || locationFilter === 'all'
-        ? contacts
-        : contacts.filter((contact) => contact.location === locationFilter)
+  const handleSubmit = () => {
+    if (!newContact.name.trim()) return
+    setContacts((prev) => [
+      ...prev,
+      {
+        ...newContact,
+        id: Date.now(),
+        position: '',
+        department: '',
+        location: '',
+        manager: '',
+        militaryPostalCode: '',
+        mobile: '',
+      },
+    ])
+    setNewContact(initialNewContact)
+  }
+
+  const getFilteredContacts = useMemo(() => {
+    return contacts
+      .filter((c) =>
+        [
+          c.rank,
+          c.position,
+          c.manager,
+          c.department,
+          c.location,
+          c.militaryPostalCode,
+        ]
+          .filter(Boolean)
+          .some((val) => val.toLowerCase().includes(search.toLowerCase()))
       )
-        .map((contact) => contact.department)
-        .filter(Boolean)
+      .filter((c) =>
+        filterFields.every(
+          (field) => !filters[field] || filters[field] === c[field]
+        )
+      )
+  }, [contacts, filters, search])
+
+  const validOptions = useMemo(() => {
+    const filtered = contacts.filter((c) =>
+      filterFields.every(
+        (field) => !filters[field] || filters[field] === c[field]
+      )
     )
-  )
+    return filterFields.reduce((acc, field) => {
+      acc[field] = Array.from(
+        new Set(filtered.map((c) => c[field]).filter(Boolean))
+      )
+      return acc
+    }, {} as Record<(typeof filterFields)[number], string[]>)
+  }, [contacts, filters])
+
+  const filterRows = filterFields.map((field) => ({
+    label:
+      field === 'rank'
+        ? 'Cấp bậc:'
+        : field === 'position'
+        ? 'Chức vụ:'
+        : field === 'department'
+        ? 'Phòng/Ban:'
+        : 'Đơn vị:',
+    value: filters[field],
+    onChange: (val: string) => handleFilterChange(field, val),
+    placeholder: `Lọc theo ${field}`,
+    options: validOptions[field],
+  }))
+
+  const resetFilters = () => {
+    setSearch('')
+    setFilters(initialFilters)
+  }
 
   return (
     <SidebarInset>
@@ -94,83 +124,89 @@ export default function ContactPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            <FilterDialog
+              footer={
+                <Button variant="outline" onClick={resetFilters}>
+                  Làm mới
+                  <RefreshCcw className="ml-2 h-4 w-4" />
+                </Button>
+              }
+            >
+              {filterRows.map((props) => (
+                <FilterRow key={props.label} {...props} />
+              ))}
+            </FilterDialog>
+          </div>
 
-            {/* Bộ lọc */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">Bộ lọc nâng cao</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Bộ lọc nâng cao</DialogTitle>
-                </DialogHeader>
-
-                <div className="w-full flex flex-col gap-4 py-4">
-                  {[
-                    {
-                      label: 'Đơn vị:',
-                      value: locationFilter,
-                      onChange: setLocationFilter,
-                      placeholder: 'Lọc theo đơn vị',
-                      options: validLocations,
-                    },
-                    {
-                      label: 'Phòng/Ban:',
-                      value: departmentFilter,
-                      onChange: setDepartmentFilter,
-                      placeholder: 'Lọc theo phòng ban',
-                      options: validDepartments,
-                    },
-                  ].map(({ label, value, onChange, placeholder, options }) => (
-                    <div
-                      key={label}
-                      className="flex justify-between gap-4 py-4"
-                    >
-                      <Label>{label}</Label>
-                      <Select value={value} onValueChange={onChange}>
-                        <SelectTrigger className="w-2/3">
-                          <SelectValue placeholder={placeholder} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Tất cả</SelectItem>
-                          {options.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
-                </div>
-
-                <DialogFooter className="mt-4 flex justify-end">
+          <div className="flex items-center gap-4">
+            <AddDialog
+              title="Thêm liên hệ mới"
+              footer={
+                <>
                   <Button
-                    onClick={() => {
-                      setSearch('')
-                      setLocationFilter('')
-                      setDepartmentFilter('')
-                    }}
+                    variant="outline"
+                    onClick={() => setNewContact(initialNewContact)}
                   >
                     Làm mới
                     <RefreshCcw className="ml-2 h-4 w-4" />
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+                  <Button
+                    className="bg-green-700 text-white hover:bg-green-800"
+                    onClick={handleSubmit}
+                  >
+                    Lưu
+                  </Button>
+                </>
+              }
+            >
+              {(['name', 'rank'] as const).map((field) => (
+                <div key={field} className="flex flex-col gap-2">
+                  <Label htmlFor={field}>
+                    {field === 'name' ? 'Họ tên' : 'Cấp bậc'}
+                  </Label>
+                  <Input
+                    id={field}
+                    placeholder={`Nhập ${
+                      field === 'name' ? 'họ tên' : 'cấp bậc'
+                    }...`}
+                    value={newContact[field]}
+                    onChange={(e) =>
+                      handleNewContactChange(field, e.target.value)
+                    }
+                  />
+                </div>
+              ))}
+            </AddDialog>
 
-          {/* Thêm bản ghi mới */}
-          <AddDialog
-            onReset={() => {
-              setSearch('')
-              setLocationFilter('')
-              setDepartmentFilter('')
-            }}
-          />
+            <InputExcel
+              onImport={(rows) => {
+                setContacts((prev) => {
+                  const maxId = prev.reduce(
+                    (max, contact) => Math.max(max, contact.id),
+                    0
+                  )
+
+                  const mapped = rows.map((row, i) => ({
+                    id: maxId + i + 1,
+                    name: row.name || row['Họ tên'] || '',
+                    rank: row.rank || row['Cấp bậc'] || '',
+                    position: row.position || row['Chức vụ'] || '',
+                    department: row.department || row['Phòng/Ban'] || '',
+                    location: row.location || row['Đơn vị'] || '',
+                    manager: row.manager || row['Quản lý'] || '',
+                    militaryPostalCode:
+                      row.militaryPostalCode || row['Mã BĐQS'] || '',
+                    mobile: row.mobile || row['Số điện thoại'] || '',
+                  }))
+
+                  return [...prev, ...mapped]
+                })
+              }}
+            />
+          </div>
         </div>
 
-        <DataTable columns={columns} data={filteredContacts} />
+        <DataTable columns={columns} data={getFilteredContacts} />
       </div>
     </SidebarInset>
   )

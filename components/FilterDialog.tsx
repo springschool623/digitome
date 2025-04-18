@@ -11,27 +11,23 @@ import {
 import { Button } from '@/components/ui/button'
 import { ReactNode } from 'react'
 
-interface AddDialogProps {
-  title: string
+interface FilterDialogProps {
+  title?: string
   triggerLabel?: string
-  onReset?: () => void
-  onSubmit?: () => void
-  children?: ReactNode // nội dung form tuỳ biến
-  footer?: ReactNode // hiển thị nút làm mới và lưu
+  children: ReactNode
+  footer?: ReactNode
 }
 
-export default function AddDialog({
-  title,
-  triggerLabel = 'Thêm mới',
+export default function FilterDialog({
+  title = 'Bộ lọc nâng cao',
+  triggerLabel = 'Bộ lọc nâng cao',
   children,
   footer,
-}: AddDialogProps) {
+}: FilterDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-green-700 text-white hover:bg-green-700 cursor-pointer">
-          {triggerLabel}
-        </Button>
+        <Button variant="outline">{triggerLabel}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
