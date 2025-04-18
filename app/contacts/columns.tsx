@@ -97,11 +97,11 @@ export const columns: ColumnDef<Contact>[] = [
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuItem>Favorite</DropdownMenuItem>
+          <DropdownMenuItem>Chỉnh sửa</DropdownMenuItem>
+          <DropdownMenuItem>Nhân bản</DropdownMenuItem>
+          <DropdownMenuItem>Yêu thích</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Delete</DropdownMenuItem>
+          <DropdownMenuItem>Xóa</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ),

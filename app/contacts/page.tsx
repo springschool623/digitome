@@ -4,8 +4,15 @@ import { useState } from 'react'
 import { columns } from './columns'
 import { DataTable } from './data-table'
 import { contacts } from './data'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/app-sidebar'
+import { SidebarInset } from '@/components/ui/sidebar'
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 import { Input } from '@/components/ui/input'
 import {
@@ -18,6 +25,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { RefreshCcw } from 'lucide-react'
 import Header from '@/components/PageHeader'
+import { Label } from '@/components/ui/label'
+import AddDialog from '@/components/AddDialog'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
@@ -32,9 +41,14 @@ export default function ContactPage() {
 
   const filteredContacts = contacts
     .filter((contact) =>
-      [contact.location, contact.mobile, contact.militaryPostalCode].some(
-        (field) => field.toLowerCase().includes(search.toLowerCase())
-      )
+      [
+        contact.rank,
+        contact.position,
+        contact.manager,
+        contact.department,
+        contact.location,
+        contact.militaryPostalCode,
+      ].some((field) => field.toLowerCase().includes(search.toLowerCase()))
     )
     .filter(
       (contact) =>
@@ -70,62 +84,94 @@ export default function ContactPage() {
   )
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Header breadcrumbs={breadcrumbs} />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="flex items-center gap-4 mb-4">
+    <SidebarInset>
+      <Header breadcrumbs={breadcrumbs} />
+      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex items-center justify-between my-4">
+          <div className="flex items-center gap-4">
             <Input
               placeholder="Tìm kiếm..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-1/3"
             />
-            <Select value={locationFilter} onValueChange={setLocationFilter}>
-              <SelectTrigger className="w-1/4">
-                <SelectValue placeholder="Lọc theo cơ quan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                {validLocations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={departmentFilter}
-              onValueChange={setDepartmentFilter}
-            >
-              <SelectTrigger className="w-1/4">
-                <SelectValue placeholder="Lọc theo phòng ban" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                {validDepartments.map((department) => (
-                  <SelectItem key={department} value={department}>
-                    {department}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={() => {
-                setSearch('')
-                setLocationFilter('')
-                setDepartmentFilter('')
-              }}
-              className="ml-2"
-            >
-              Làm mới
-              <RefreshCcw className="ml-2 h-4 w-4" />
-            </Button>
+
+            {/* Bộ lọc */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">Bộ lọc nâng cao</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Bộ lọc nâng cao</DialogTitle>
+                </DialogHeader>
+
+                <div className="w-full flex flex-col gap-4 py-4">
+                  {[
+                    {
+                      label: 'Đơn vị:',
+                      value: locationFilter,
+                      onChange: setLocationFilter,
+                      placeholder: 'Lọc theo đơn vị',
+                      options: validLocations,
+                    },
+                    {
+                      label: 'Phòng/Ban:',
+                      value: departmentFilter,
+                      onChange: setDepartmentFilter,
+                      placeholder: 'Lọc theo phòng ban',
+                      options: validDepartments,
+                    },
+                  ].map(({ label, value, onChange, placeholder, options }) => (
+                    <div
+                      key={label}
+                      className="flex justify-between gap-4 py-4"
+                    >
+                      <Label>{label}</Label>
+                      <Select value={value} onValueChange={onChange}>
+                        <SelectTrigger className="w-2/3">
+                          <SelectValue placeholder={placeholder} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tất cả</SelectItem>
+                          {options.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+
+                <DialogFooter className="mt-4 flex justify-end">
+                  <Button
+                    onClick={() => {
+                      setSearch('')
+                      setLocationFilter('')
+                      setDepartmentFilter('')
+                    }}
+                  >
+                    Làm mới
+                    <RefreshCcw className="ml-2 h-4 w-4" />
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-          <DataTable columns={columns} data={filteredContacts} />
+
+          {/* Thêm bản ghi mới */}
+          <AddDialog
+            onReset={() => {
+              setSearch('')
+              setLocationFilter('')
+              setDepartmentFilter('')
+            }}
+          />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+
+        <DataTable columns={columns} data={filteredContacts} />
+      </div>
+    </SidebarInset>
   )
 }
