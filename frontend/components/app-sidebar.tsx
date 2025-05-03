@@ -3,14 +3,14 @@
 import * as React from 'react'
 import {
   AudioWaveform,
-  BookOpen,
   Bot,
   Command,
   GalleryVerticalEnd,
   Map,
   Phone,
   PieChart,
-  Settings2,
+  // BookOpen,
+  // Settings2,
 } from 'lucide-react'
 
 import { NavMain } from '@/components/nav-main'
@@ -71,13 +71,13 @@ const data = {
       ],
     },
     {
-      title: 'Models',
+      title: 'Chức năng phụ',
       url: '#',
       icon: Bot,
       items: [
         {
-          title: 'Genesis',
-          url: '#',
+          title: 'Phân quyền',
+          url: '/roles',
         },
         {
           title: 'Explorer',
@@ -89,52 +89,52 @@ const data = {
         },
       ],
     },
-    {
-      title: 'Documentation',
-      url: '#',
-      icon: BookOpen,
-      items: [
-        {
-          title: 'Introduction',
-          url: '#',
-        },
-        {
-          title: 'Get Started',
-          url: '#',
-        },
-        {
-          title: 'Tutorials',
-          url: '#',
-        },
-        {
-          title: 'Changelog',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Settings',
-      url: '#',
-      icon: Settings2,
-      items: [
-        {
-          title: 'General',
-          url: '#',
-        },
-        {
-          title: 'Team',
-          url: '#',
-        },
-        {
-          title: 'Billing',
-          url: '#',
-        },
-        {
-          title: 'Limits',
-          url: '#',
-        },
-      ],
-    },
+    // {
+    //   title: 'Documentation',
+    //   url: '#',
+    //   icon: BookOpen,
+    //   items: [
+    //     {
+    //       title: 'Introduction',
+    //       url: '#',
+    //     },
+    //     {
+    //       title: 'Get Started',
+    //       url: '#',
+    //     },
+    //     {
+    //       title: 'Tutorials',
+    //       url: '#',
+    //     },
+    //     {
+    //       title: 'Changelog',
+    //       url: '#',
+    //     },
+    //   ],
+    // },
+    // {
+    //   title: 'Settings',
+    //   url: '#',
+    //   icon: Settings2,
+    //   items: [
+    //     {
+    //       title: 'General',
+    //       url: '#',
+    //     },
+    //     {
+    //       title: 'Team',
+    //       url: '#',
+    //     },
+    //     {
+    //       title: 'Billing',
+    //       url: '#',
+    //     },
+    //     {
+    //       title: 'Limits',
+    //       url: '#',
+    //     },
+    //   ],
+    // },
   ],
   projects: [
     {

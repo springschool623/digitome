@@ -2,7 +2,6 @@ import { Toaster } from 'sonner'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/app-sidebar'
 import './globals.css'
 
 const geistSans = Geist({
@@ -30,12 +29,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SidebarProvider>
-          <AppSidebar />
-          {children}
-        </SidebarProvider>
+        <SidebarProvider>{children}</SidebarProvider>
 
-        {/* Thêm Toaster vào đây */}
         <Toaster position="bottom-right" />
       </body>
     </html>

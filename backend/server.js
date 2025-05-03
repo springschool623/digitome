@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import contactRoutes from './routes/contactsRoute.js'
+import accountRoutes from './routes/accountsRoute.js' // <--- thêm dòng này
 
 dotenv.config()
 
@@ -12,6 +13,7 @@ app.use(cors())
 app.use(express.json())
 
 app.use('/api/contacts', contactRoutes)
+app.use('/api/accounts', accountRoutes) // <--- đăng ký routes tài khoản
 
 app.get('/', (req, res) => {
   res.send('Digitome Backend Running!')
