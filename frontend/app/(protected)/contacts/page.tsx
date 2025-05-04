@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { columns, Contact } from './columns'
-// ❌ Xoá dòng này: import { contacts as initialContacts } from './data'
 import { DataTable } from './data-table'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
@@ -15,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputExcel from '@/components/InputExcel'
 import { toast } from 'sonner'
+import { getContacts, createContact } from '@/api/contacts'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
@@ -44,17 +44,16 @@ export default function ContactPage() {
   const [openAddDialog, setOpenAddDialog] = useState(false)
 
   useEffect(() => {
-    const fetchContacts = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/contacts')
-        const data = await res.json()
+        const data = await getContacts()
         setContacts(data)
       } catch (error) {
         console.error('Lỗi khi lấy danh bạ:', error)
       }
     }
 
-    fetchContacts()
+    fetchData()
   }, [])
 
   const updateState =
@@ -79,45 +78,17 @@ export default function ContactPage() {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/contacts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const data = await createContact(newContact)
+      setContacts((prev) => [...prev, data])
+      setNewContact(initialNewContact)
+      toast.success('Thêm liên hệ thành công!', {
+        style: {
+          background: '#28a745', // Màu xanh lá
+          color: '#fff', // Chữ trắng
         },
-        body: JSON.stringify({
-          rank: newContact.rank,
-          position: newContact.position,
-          manager: newContact.manager,
-          department: newContact.department,
-          location: newContact.location,
-          militaryportalcode: newContact.militaryPostalCode, // Lưu ý tên cột trong CSDL
-          mobile: newContact.mobile,
-        }),
+        duration: 3000, // Toast sẽ hiển thị trong 3 giây
       })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        setContacts((prev) => [...prev, data])
-        setNewContact(initialNewContact)
-        toast.success('Thêm liên hệ thành công!', {
-          style: {
-            background: '#28a745', // Màu xanh lá
-            color: '#fff', // Chữ trắng
-          },
-          duration: 3000, // Toast sẽ hiển thị trong 3 giây
-        })
-        setOpenAddDialog(false) // 👉 ĐÓNG FORM
-      } else {
-        console.error('Thêm liên hệ thất bại:', data)
-        toast.error('Thêm liên hệ thất bại!', {
-          style: {
-            background: 'red', // Màu đỏ
-            color: '#fff', // Chữ trắng
-          },
-          duration: 3000, // Toast sẽ hiển thị trong 3 giây
-        })
-      }
+      setOpenAddDialog(false) // 👉 ĐÓNG FORM
     } catch (error) {
       console.error('Lỗi khi gửi dữ liệu:', error)
       toast.error('Đã xảy ra lỗi khi gửi dữ liệu!', {

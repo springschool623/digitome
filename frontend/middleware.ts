@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Danh sách các đường dẫn được bảo vệ, chỉ cho phép truy cập khi đã đăng nhập
-const protectedPaths = ['/dashboard', '/contacts', '/roles']
+const protectedPaths = ['/dashboard', '/contacts', '/accounts']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

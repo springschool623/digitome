@@ -77,7 +77,7 @@ const data = {
       items: [
         {
           title: 'Phân quyền',
-          url: '/roles',
+          url: '/accounts',
         },
         {
           title: 'Explorer',

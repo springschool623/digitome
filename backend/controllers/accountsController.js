@@ -9,7 +9,7 @@ const SECRET_KEY = process.env.JWT_SECRET_KEY
 export const getAllAccounts = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, mobile_phone, user_role, created_at FROM military_account ORDER BY id ASC'
+      'SELECT ma.id, mobile_phone, r.name, updated_at, created_by, status FROM military_account ma JOIN roles r ON ma.role_id = r.id ORDER BY id ASC'
     )
     res.json(result.rows)
   } catch (error) {
@@ -23,7 +23,10 @@ export const loginAccount = async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT * FROM military_account WHERE mobile_phone = $1',
+      `SELECT ma.*, r.name AS role_name 
+   FROM military_account ma 
+   JOIN roles r ON ma.role_id = r.id 
+   WHERE ma.mobile_phone = $1`,
       [mobile_phone]
     )
 
@@ -33,17 +36,24 @@ export const loginAccount = async (req, res) => {
 
     const user = result.rows[0]
 
+    // Kiểm tra trạng thái tài khoản
+    if (user.status !== 'active') {
+      return res.status(403).json({ error: 'Tài khoản không hoạt động' })
+    }
+
     // So sánh mật khẩu dạng thuần (nên mã hoá sau này)
     if (user.password !== password) {
       return res.status(401).json({ error: 'Mật khẩu không chính xác' })
     }
+
+    // console.log('User logged in:', user)
 
     // Tạo token
     const token = jwt.sign(
       {
         id: user.id,
         mobile_phone: user.mobile_phone,
-        user_role: user.user_role,
+        role: user.role_name, // dùng role_name thay vì user_role
       },
       SECRET_KEY,
       { expiresIn: '1h' }
@@ -56,7 +66,7 @@ export const loginAccount = async (req, res) => {
       user: {
         id: user.id,
         mobile_phone: user.mobile_phone,
-        user_role: user.user_role,
+        role: user.role_name, // dùng đúng tên đã mã hóa
       },
     })
   } catch (error) {

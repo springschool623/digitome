@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { login } from '@/api/login'
 
 export function LoginForm({
   className,
@@ -29,59 +29,18 @@ export function LoginForm({
     setError(null)
 
     try {
-      const response = await fetch('http://localhost:5000/api/accounts/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile_phone: mobilePhone, password }),
-      })
-
-      const data = await response.json()
-
-      if (response.status === 401) {
-        toast.error(data.error || 'Thông tin đăng nhập không đúng', {
-          style: { background: '#dc2626', color: '#fff' },
-          duration: 3000,
-        })
-        setError(data.error)
-        return
-      }
-
-      if (response.status === 500) {
-        toast.error('Lỗi máy chủ, vui lòng thử lại sau.', {
-          style: { background: '#dc2626', color: '#fff' },
-          duration: 3000,
-        })
-        setError('Đã xảy ra lỗi máy chủ.')
-        return
-      }
-
-      if (!response.ok) {
-        toast.error(data.error || 'Đăng nhập thất bại', {
-          style: { background: '#dc2626', color: '#fff' },
-          duration: 3000,
-        })
-        setError(data.error || 'Lỗi không xác định')
-        return
-      }
-
-      // Thành công
-      toast.success('Đăng nhập thành công!', {
-        style: { background: '#28a745', color: '#fff' },
-        duration: 3000,
-      })
-      console.log('User data:', data.user)
-      console.log('Token:', data.token) // ✅ In token ra kiểm tra
+      const data = await login(mobilePhone, password)
 
       // Lưu token vào cookie
       document.cookie = `token=${data.token}; path=/;`
+      console.log('Token:', data.token)
+      console.log('User:', data.user)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
       // Chuyển hướng
       router.push('/dashboard')
     } catch (err) {
-      toast.error('Không thể kết nối đến máy chủ.', {
-        style: { background: '#dc2626', color: '#fff' },
-        duration: 3000,
-      })
-      setError('Không thể kết nối đến máy chủ.')
+      setError('Lỗi không xác định!')
       console.error('Login error:', err)
     }
   }

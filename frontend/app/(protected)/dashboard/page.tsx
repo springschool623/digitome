@@ -1,9 +1,13 @@
+'use client'
 import Header from '@/components/PageHeader'
 import { SidebarInset } from '@/components/ui/sidebar'
+import { useUser } from '@/hooks/useUser'
 
 const breadcrumbs = [{ label: 'Dashboard', href: 'dashboard' }]
 
 export default function Page() {
+  const user = useUser()
+
   return (
     <SidebarInset>
       <Header breadcrumbs={breadcrumbs} />
@@ -15,6 +19,7 @@ export default function Page() {
           <div className="aspect-video rounded-xl bg-muted/50" />
         </div>
         <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+        <div>{user ? user.role : 'No user found'}</div>
       </div>
     </SidebarInset>
   )
