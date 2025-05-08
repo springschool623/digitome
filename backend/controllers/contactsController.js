@@ -7,6 +7,20 @@ export const getAllContacts = async (req, res) => {
   res.json(result.rows)
 }
 
+export const getContact = async (req, res) => {
+  const { id } = req.params
+  const result = await pool.query(
+    'SELECT * FROM military_contacts WHERE id = $1',
+    [id]
+  )
+  
+  if (result.rows.length === 0) {
+    return res.status(404).json({ message: 'Contact not found' })
+  }
+  
+  res.json(result.rows[0])
+}
+
 export const createContact = async (req, res) => {
   const {
     rank,
@@ -58,6 +72,10 @@ export const updateContact = async (req, res) => {
       id,
     ]
   )
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ message: 'Contact not found' })
+  }
 
   res.json(result.rows[0])
 }

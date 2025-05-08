@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { columns, Contact } from './columns'
+import { createColumns, Contact } from './columns'
 import { DataTable } from './data-table'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
-import { RefreshCcw } from 'lucide-react'
+import { RefreshCcw, Edit2, Check } from 'lucide-react'
 import Header from '@/components/PageHeader'
 import AddDialog from '@/components/AddDialog'
 import FilterDialog from '@/components/FilterDialog'
@@ -42,6 +42,7 @@ export default function ContactPage() {
   const [newContact, setNewContact] =
     useState<Omit<Contact, 'id'>>(initialNewContact)
   const [openAddDialog, setOpenAddDialog] = useState(false)
+  const [isInlineEditEnabled, setIsInlineEditEnabled] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,6 +102,14 @@ export default function ContactPage() {
     }
   }
 
+  const handleUpdateContact = (updatedContact: Contact) => {
+    setContacts((prev) =>
+      prev.map((contact) =>
+        contact.id === updatedContact.id ? updatedContact : contact
+      )
+    )
+  }
+
   const getFilteredContacts = useMemo(() => {
     return contacts
       .filter((c) =>
@@ -156,6 +165,11 @@ export default function ContactPage() {
     setFilters(initialFilters)
   }
 
+  const columns = useMemo(
+    () => createColumns(handleUpdateContact, isInlineEditEnabled),
+    [isInlineEditEnabled]
+  )
+
   return (
     <SidebarInset>
       <Header breadcrumbs={breadcrumbs} />
@@ -179,6 +193,23 @@ export default function ContactPage() {
                 <FilterRow key={props.label} {...props} />
               ))}
             </FilterDialog>
+            <Button
+              variant={isInlineEditEnabled ? "default" : "outline"}
+              onClick={() => setIsInlineEditEnabled(!isInlineEditEnabled)}
+              className={isInlineEditEnabled ? "bg-green-700 text-white hover:bg-green-800" : ""}
+            >
+              {isInlineEditEnabled ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Inline Edit
+                </>
+              ) : (
+                <>
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  Inline Edit
+                </>
+              )}
+            </Button>
           </div>
 
           <div className="flex items-center gap-4">
