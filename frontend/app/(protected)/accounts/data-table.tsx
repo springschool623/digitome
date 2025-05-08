@@ -49,8 +49,8 @@ export function DataTable<TData, TValue>({
   })
 
   return (
-    <div>
-      <Table className="rounded-xl border">
+    <>
+      <Table className="rounded-xl border border-gray-200 [&>tbody>tr:nth-child(even)]:bg-gray-50">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -168,6 +168,6 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

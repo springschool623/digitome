@@ -33,7 +33,7 @@ export default function AddDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button className="bg-green-700 text-white hover:bg-green-700 cursor-pointer">
+        <Button className="bg-green-500 text-white hover:bg-green-600">
           {triggerLabel}
         </Button>
       </DialogTrigger>

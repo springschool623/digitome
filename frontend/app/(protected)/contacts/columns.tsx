@@ -16,17 +16,7 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { updateContact } from '@/api/contacts'
-
-export type Contact = {
-  id: number
-  rank: string
-  position: string
-  manager: string
-  department: string
-  location: string
-  militaryPostalCode: string
-  mobile: string
-}
+import { Contact } from '@/types/contact'
 
 type EditableCellProps = {
   value: string
@@ -111,7 +101,7 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
   )
 }
 
-export const createColumns = (
+export const contactColumns = (
   onUpdateContact: (updatedContact: Contact) => void,
   isInlineEditEnabled: boolean
 ): ColumnDef<Contact>[] => [
@@ -273,6 +263,7 @@ export const createColumns = (
   },
   {
     id: 'actions',
+    header: 'Hành động',
     cell: ({ row }) => {
       const router = useRouter()
       const contact = row.original

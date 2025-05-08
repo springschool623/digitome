@@ -1,17 +1,22 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { columns, Account } from './columns'
+import { accountColumns, roleColumns } from './columns'
 import { DataTable } from './data-table'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
-import { RefreshCcw } from 'lucide-react'
+import { Plus, RefreshCcw } from 'lucide-react'
 import Header from '@/components/PageHeader'
 import AddDialog from '@/components/AddDialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { createAccount, getAccounts } from '@/api/accounts'
+import { Account } from '@/types/account'
+import { Role } from '@/types/role'
+import { getRoles, createRole } from '@/api/roles'
+import { TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs } from '@/components/ui/tabs'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
@@ -28,18 +33,27 @@ const initialNewAccount: Omit<Account, 'id'> = {
   status: '',
 }
 
+const initialNewRole: Omit<Role, 'id'> = {
+  name: '',
+  description: '',
+}
+
 export default function AccountPage() {
   const [search, setSearch] = useState('')
   const [accounts, setAccounts] = useState<Account[]>([])
-  const [newAccount, setNewAccount] =
-    useState<Omit<Account, 'id'>>(initialNewAccount)
+  const [newAccount, setNewAccount] = useState<Omit<Account, 'id'>>(initialNewAccount)
+  const [newRole, setNewRole] = useState<Omit<Role, 'id'>>(initialNewRole)
   const [openAddDialog, setOpenAddDialog] = useState(false)
+  const [openAddRoleDialog, setOpenAddRoleDialog] = useState(false)
+  const [roles, setRoles] = useState<Role[]>([])
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getAccounts()
-        setAccounts(data)
+        const accounts_data = await getAccounts()
+        const roles_data = await getRoles()
+        setAccounts(accounts_data)
+        setRoles(roles_data)
       } catch (error) {
         console.error('Lỗi khi lấy danh sách người dùng:', error)
       }
@@ -48,13 +62,13 @@ export default function AccountPage() {
     fetchData()
   }, [])
 
-  const updateNewAccount = (field: keyof typeof newAccount, value: string) => {
-    setNewAccount((prev) => ({ ...prev, [field]: value }))
+  const updateNewRole = (field: keyof typeof newRole, value: string) => {
+    setNewRole((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = async () => {
-    if (!newAccount.mobile_phone.trim() || !newAccount.password.trim()) {
-      toast.error('Số điện thoại và mật khẩu là bắt buộc!', {
+  const handleCreateRole = async () => {
+    if (!newRole.name.trim()) {
+      toast.error('Tên quyền là bắt buộc!', {
         style: { background: 'red', color: '#fff' },
         duration: 3000,
       })
@@ -62,17 +76,17 @@ export default function AccountPage() {
     }
 
     try {
-      const data = await createAccount(newAccount)
-      setAccounts((prev) => [...prev, data])
-      setNewAccount(initialNewAccount)
-      toast.success('Thêm người dùng thành công!', {
+      const data = await createRole(newRole)
+      setRoles((prev) => [...prev, data])
+      setNewRole(initialNewRole)
+      toast.success('Thêm quyền thành công!', {
         style: { background: '#28a745', color: '#fff' },
         duration: 3000,
       })
-      setOpenAddDialog(false)
+      setOpenAddRoleDialog(false)
     } catch (error) {
-      console.error('Lỗi khi gửi dữ liệu:', error)
-      toast.error('Đã xảy ra lỗi khi thêm người dùng!', {
+      console.error('Lỗi khi thêm quyền:', error)
+      toast.error('Đã xảy ra lỗi khi thêm quyền!', {
         style: { background: 'red', color: '#fff' },
         duration: 3000,
       })
@@ -90,65 +104,77 @@ export default function AccountPage() {
   return (
     <SidebarInset>
       <Header breadcrumbs={breadcrumbs} />
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="flex items-center justify-between my-4">
-          <Input
-            placeholder="Tìm kiếm người dùng..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-80"
-          />
-
-          <div className="flex items-center gap-4">
-            <AddDialog
-              title="Thêm người dùng mới"
-              open={openAddDialog}
-              onOpenChange={setOpenAddDialog}
-              footer={
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setNewAccount(initialNewAccount)}
-                  >
-                    Làm mới
-                    <RefreshCcw className="ml-2 h-4 w-4" />
-                  </Button>
-                  <Button
-                    className="bg-green-700 text-white hover:bg-green-800"
-                    onClick={handleSubmit}
-                  >
-                    Lưu
-                  </Button>
-                </>
-              }
-            >
-              {(
-                [
-                  ['mobile_phone', 'Số điện thoại'],
-                  ['password', 'Mật khẩu'],
-                  ['role_id', 'Vai trò'],
-                  ['updated_at', 'Cập nhật lúc'],
-                  ['created_by', 'Tạo bởi'],
-                  ['status', 'Trạng thái'],
-                ] as const
-              ).map(([field, label]) => (
-                <div key={field} className="flex flex-col gap-2">
-                  <Label htmlFor={field}>{label}</Label>
-                  <Input
-                    id={field}
-                    placeholder={`Nhập ${label.toLowerCase()}...`}
-                    type={field === 'password' ? 'password' : 'text'}
-                    value={newAccount[field]}
-                    onChange={(e) => updateNewAccount(field, e.target.value)}
-                  />
+      <Tabs defaultValue="accounts">
+        <TabsList className="px-4">
+          <TabsTrigger value="accounts">Tài Khoản</TabsTrigger>
+          <TabsTrigger value="roles">Phân Quyền</TabsTrigger>
+        </TabsList>
+        <div className="flex flex-1 flex-col gap-4 p-4">
+          <div className="flex items-center justify-between mt-2">
+            <Input
+              placeholder="Tìm kiếm người dùng..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-80"
+            />
+            <div className='flex gap-2'>
+              <Button variant="outline" className='bg-blue-500 text-white hover:bg-blue-600 hover:text-white'>
+                <Plus />
+                Cấp quyền tài khoản
+              </Button>
+              <AddDialog
+                title="Thêm quyền mới"
+                open={openAddRoleDialog}
+                onOpenChange={setOpenAddRoleDialog}
+                footer={
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => setNewRole(initialNewRole)}
+                    >
+                      Làm mới
+                      <RefreshCcw className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button
+                      className="bg-green-500 text-white hover:bg-green-600"
+                      onClick={handleCreateRole}
+                    >
+                      Lưu
+                    </Button>
+                  </>
+                }
+              >
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="name">Tên quyền</Label>
+                    <Input
+                      id="name"
+                      placeholder="Nhập tên quyền..."
+                      value={newRole.name}
+                      onChange={(e) => updateNewRole('name', e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="description">Mô tả</Label>
+                    <Input
+                      id="description"
+                      placeholder="Nhập mô tả..."
+                      value={newRole.description}
+                      onChange={(e) => updateNewRole('description', e.target.value)}
+                    />
+                  </div>
                 </div>
-              ))}
-            </AddDialog>
+              </AddDialog>
+            </div>
           </div>
+          <TabsContent value="accounts">
+            <DataTable columns={accountColumns} data={getFilteredAccounts} />
+          </TabsContent>
+          <TabsContent value="roles">
+            <DataTable columns={roleColumns} data={roles} />
+          </TabsContent>
         </div>
-
-        <DataTable columns={columns} data={getFilteredAccounts} />
-      </div>
+      </Tabs>
     </SidebarInset>
   )
 }

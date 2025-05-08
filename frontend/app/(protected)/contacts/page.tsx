@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { createColumns, Contact } from './columns'
 import { DataTable } from './data-table'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
@@ -15,6 +14,8 @@ import { Label } from '@/components/ui/label'
 import InputExcel from '@/components/InputExcel'
 import { toast } from 'sonner'
 import { getContacts, createContact } from '@/api/contacts'
+import { contactColumns } from './columns'
+import { Contact } from '@/types/contact'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
@@ -166,7 +167,7 @@ export default function ContactPage() {
   }
 
   const columns = useMemo(
-    () => createColumns(handleUpdateContact, isInlineEditEnabled),
+    () => contactColumns(handleUpdateContact, isInlineEditEnabled),
     [isInlineEditEnabled]
   )
 
