@@ -10,13 +10,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ColumnDef } from '@tanstack/react-table'
-import { MoreVerticalIcon, Check, X } from 'lucide-react'
+import { MoreVerticalIcon, Check, X, MapPin } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { updateContact } from '@/api/contacts'
 import { Contact } from '@/types/contact'
+import { usePermission } from '@/hooks/usePermission'
+import { AddressDialog } from '@/components/AddressDialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useContact } from '@/contexts/ContactContext'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ChevronsUpDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type EditableCellProps = {
   value: string
@@ -31,6 +44,22 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value)
   const [isSaving, setIsSaving] = useState(false)
+  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false)
+  const [open, setOpen] = useState(false)
+  const { departments, locations, ranks } = useContact()
+
+  const getOptions = () => {
+    switch (column.id) {
+      case 'department':
+        return departments
+      case 'location':
+        return locations
+      case 'rank':
+        return ranks
+      default:
+        return []
+    }
+  }
 
   const handleSave = async () => {
     if (editValue === value) {
@@ -56,11 +85,149 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
     setIsEditing(false)
   }
 
+  const handleAddressSave = async (newAddress: string) => {
+    setEditValue(newAddress)
+    setIsSaving(true)
+    try {
+      const updatedContact = { ...row.original, [column.id]: newAddress }
+      await onSave(row.original.id, column.id, newAddress)
+      onUpdate(updatedContact)
+      setIsEditing(false)
+    } catch (error) {
+      console.error('Lỗi khi cập nhật:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   if (!isEnabled) {
-    return <div className="p-2">{value}</div>
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="p-2 truncate">{value}</div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="max-w-[300px] break-words">{value}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
   }
 
   if (isEditing) {
+    if (column.id === 'address') {
+      return (
+        <>
+          <div className="flex items-center gap-2">
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              className="h-8"
+              disabled={isSaving}
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 shrink-0"
+              onClick={() => setIsAddressDialogOpen(true)}
+              disabled={isSaving}
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 shrink-0"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              <Check className="h-4 w-4 text-green-600" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 shrink-0"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              <X className="h-4 w-4 text-red-600" />
+            </Button>
+          </div>
+          <AddressDialog
+            isOpen={isAddressDialogOpen}
+            onClose={() => setIsAddressDialogOpen(false)}
+            onSave={handleAddressSave}
+            initialAddress={editValue}
+          />
+        </>
+      )
+    }
+
+    if (['department', 'location', 'rank'].includes(column.id)) {
+      return (
+        <div className="flex items-center gap-2">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-[200px] justify-between"
+              >
+                {editValue || "Chọn..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+                <CommandInput placeholder="Tìm kiếm..." />
+                <CommandEmpty>Không tìm thấy.</CommandEmpty>
+                <CommandGroup>
+                  {getOptions().map((option) => (
+                    <CommandItem
+                      key={option}
+                      value={option}
+                      onSelect={(currentValue) => {
+                        setEditValue(currentValue)
+                        setOpen(false)
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          editValue === option ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {option}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 shrink-0"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            <Check className="h-4 w-4 text-green-600" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 shrink-0"
+            onClick={handleCancel}
+            disabled={isSaving}
+          >
+            <X className="h-4 w-4 text-red-600" />
+          </Button>
+        </div>
+      )
+    }
+
     return (
       <div className="flex items-center gap-2">
         <Input
@@ -72,7 +239,7 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8"
+          className="h-8 w-8 shrink-0"
           onClick={handleSave}
           disabled={isSaving}
         >
@@ -81,7 +248,7 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8"
+          className="h-8 w-8 shrink-0"
           onClick={handleCancel}
           disabled={isSaving}
         >
@@ -92,12 +259,21 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
   }
 
   return (
-    <div
-      className="cursor-pointer hover:bg-muted/50 p-2 rounded-md"
-      onClick={() => setIsEditing(true)}
-    >
-      {value}
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className="cursor-pointer hover:bg-muted/50 p-2 rounded-md truncate"
+            onClick={() => setIsEditing(true)}
+          >
+            {value}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="max-w-[300px] break-words">{value}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 
@@ -226,7 +402,27 @@ export const contactColumns = (
     ),
   },
   {
-    accessorKey: 'militaryPostalCode',
+    accessorKey: 'address',
+    header: 'Địa chỉ',
+    cell: ({ row, column }) => (
+      <div className="max-w-[200px]">
+        <EditableCell
+          value={row.getValue(column.id)}
+          row={row}
+          column={column}
+          onSave={async (id, field, value) => {
+            const contact = row.original
+            await updateContact(id, { ...contact, [field]: value })
+            toast.success('Cập nhật thành công!')
+          }}
+          onUpdate={onUpdateContact}
+          isEnabled={isInlineEditEnabled}
+        />
+      </div>
+    ),
+  },
+  {
+    accessorKey: 'military_postal_code',
     header: 'Quân sự/Bưu điện',
     cell: ({ row, column }) => (
       <EditableCell
@@ -244,7 +440,7 @@ export const contactColumns = (
     ),
   },
   {
-    accessorKey: 'mobile',
+    accessorKey: 'mobile_no',
     header: 'Di động',
     cell: ({ row, column }) => (
       <EditableCell
@@ -267,7 +463,9 @@ export const contactColumns = (
     cell: ({ row }) => {
       const router = useRouter()
       const contact = row.original
-
+      const { hasPermission } = usePermission()
+      const canEdit = hasPermission('EDIT_CONTACTS')
+      const canDelete = hasPermission('DELETE_CONTACTS')
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -281,13 +479,17 @@ export const contactColumns = (
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem onClick={() => router.push(`/contacts/${contact.id}`)}>
+            {canEdit && (
+            <DropdownMenuItem onClick={() => router.push(`/contacts/edit/${contact.id}`)}>
               Chỉnh sửa
             </DropdownMenuItem>
+            )}
             <DropdownMenuItem>Nhân bản</DropdownMenuItem>
             <DropdownMenuItem>Yêu thích</DropdownMenuItem>
             <DropdownMenuSeparator />
+            {canDelete && (
             <DropdownMenuItem>Xóa</DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )

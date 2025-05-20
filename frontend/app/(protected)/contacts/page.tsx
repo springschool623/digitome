@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { DataTable } from './data-table'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
-import { RefreshCcw, Edit2, Check } from 'lucide-react'
+import { RefreshCcw, Edit2, Check, MapPin } from 'lucide-react'
 import Header from '@/components/PageHeader'
 import AddDialog from '@/components/AddDialog'
 import FilterDialog from '@/components/FilterDialog'
@@ -16,6 +16,13 @@ import { toast } from 'sonner'
 import { getContacts, createContact } from '@/api/contacts'
 import { contactColumns } from './columns'
 import { Contact } from '@/types/contact'
+import { usePermission } from '@/hooks/usePermission'
+import { ContactProvider, useContact } from '@/contexts/ContactContext'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Check as CheckIcon, ChevronsUpDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { AddressDialog } from '@/components/AddressDialog'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
@@ -25,25 +32,18 @@ const breadcrumbs = [
 
 const filterFields = ['rank', 'position', 'department', 'location'] as const
 
-const initialNewContact: Omit<Contact, 'id'> = {
-  rank: '',
-  position: '',
-  manager: '',
-  department: '',
-  location: '',
-  militaryPostalCode: '',
-  mobile: '',
-}
 const initialFilters = { rank: '', position: '', department: '', location: '' }
 
-export default function ContactPage() {
+function ContactsContent() {
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState(initialFilters)
   const [contacts, setContacts] = useState<Contact[]>([])
-  const [newContact, setNewContact] =
-    useState<Omit<Contact, 'id'>>(initialNewContact)
   const [openAddDialog, setOpenAddDialog] = useState(false)
   const [isInlineEditEnabled, setIsInlineEditEnabled] = useState(false)
+  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false)
+  const [formData, setFormData] = useState<FormData>(new FormData())
+  const { hasPermission } = usePermission()
+  const { departments, locations, ranks } = useContact()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,9 +64,8 @@ export default function ContactPage() {
       setter((prev) => ({ ...prev, [field]: value }))
 
   const handleFilterChange = updateState(setFilters)
-  const handleNewContactChange = updateState(setNewContact)
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (newContact: Omit<Contact, 'id'>) => {
     // Kiểm tra giá trị bắt buộc
     if (!newContact.manager.trim() || !newContact.rank.trim()) {
       toast.error('Tên quản lý và cấp bậc là bắt buộc!', {
@@ -76,29 +75,29 @@ export default function ContactPage() {
         },
         duration: 3000,
       })
-      return { error: 'Tên quản lý và cấp bậc là bắt buộc' }
+      return
     }
 
     try {
+      // Lấy id của liên hệ mới
       const data = await createContact(newContact)
       setContacts((prev) => [...prev, data])
-      setNewContact(initialNewContact)
       toast.success('Thêm liên hệ thành công!', {
         style: {
-          background: '#28a745', // Màu xanh lá
-          color: '#fff', // Chữ trắng
+          background: '#28a745',
+          color: '#fff',
         },
-        duration: 3000, // Toast sẽ hiển thị trong 3 giây
+        duration: 3000,
       })
-      setOpenAddDialog(false) // 👉 ĐÓNG FORM
+      setOpenAddDialog(false)
     } catch (error) {
       console.error('Lỗi khi gửi dữ liệu:', error)
       toast.error('Đã xảy ra lỗi khi gửi dữ liệu!', {
         style: {
-          background: 'red', // Màu đỏ
-          color: '#fff', // Chữ trắng
+          background: 'red',
+          color: '#fff',
         },
-        duration: 3000, // Toast sẽ hiển thị trong 3 giây
+        duration: 3000,
       })
     }
   }
@@ -120,7 +119,7 @@ export default function ContactPage() {
           c.manager,
           c.department,
           c.location,
-          c.militaryPostalCode,
+          c.military_postal_code,
         ]
           .filter(Boolean)
           .some((val) => val.toLowerCase().includes(search.toLowerCase()))
@@ -172,28 +171,28 @@ export default function ContactPage() {
   )
 
   return (
-    <SidebarInset>
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <Header breadcrumbs={breadcrumbs} />
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="flex items-center justify-between my-4">
-          <div className="flex items-center gap-4">
-            <Input
-              placeholder="Tìm kiếm..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <FilterDialog
-              footer={
-                <Button variant="outline" onClick={resetFilters}>
-                  Làm mới
-                  <RefreshCcw className="ml-2 h-4 w-4" />
-                </Button>
-              }
-            >
-              {filterRows.map((props) => (
-                <FilterRow key={props.label} {...props} />
-              ))}
-            </FilterDialog>
+      <div className="flex items-center justify-between my-4">
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="Tìm kiếm..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <FilterDialog
+            footer={
+              <Button variant="outline" onClick={resetFilters}>
+                Làm mới
+                <RefreshCcw className="ml-2 h-4 w-4" />
+              </Button>
+            }
+          >
+            {filterRows.map((props) => (
+              <FilterRow key={props.label} {...props} />
+            ))}
+          </FilterDialog>
+          {hasPermission('EDIT_CONTACTS') && (
             <Button
               variant={isInlineEditEnabled ? "default" : "outline"}
               onClick={() => setIsInlineEditEnabled(!isInlineEditEnabled)}
@@ -211,9 +210,11 @@ export default function ContactPage() {
                 </>
               )}
             </Button>
-          </div>
+          )}
+        </div>
 
-          <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4">
+          {hasPermission('EDIT_CONTACTS') && (
             <AddDialog
               title="Thêm liên hệ mới"
               open={openAddDialog}
@@ -222,48 +223,151 @@ export default function ContactPage() {
                 <>
                   <Button
                     variant="outline"
-                    onClick={() => setNewContact(initialNewContact)}
+                    onClick={() => {
+                      setOpenAddDialog(false)
+                      setFormData(new FormData())
+                    }}
                   >
-                    Làm mới
-                    <RefreshCcw className="ml-2 h-4 w-4" />
+                    Hủy
                   </Button>
                   <Button
                     className="bg-green-700 text-white hover:bg-green-800"
-                    onClick={handleSubmit}
+                    onClick={() => {
+                      const form = document.querySelector('form')
+                      if (form) {
+                        const newFormData = new FormData(form)
+                        setFormData(newFormData)
+                        const contact = {
+                          manager: newFormData.get('manager') as string,
+                          rank: newFormData.get('rank') as string,
+                          position: newFormData.get('position') as string,
+                          department: newFormData.get('department') as string,
+                          location: newFormData.get('location') as string,
+                          address: newFormData.get('address') as string,
+                          military_postal_code: newFormData.get('military_postal_code') as string,
+                          mobile_no: newFormData.get('mobile_no') as string,
+                        }
+                        handleSubmit(contact)
+                      }
+                    }}
                   >
                     Lưu
                   </Button>
                 </>
               }
             >
-              {(
-                [
-                  ['manager', 'Tên quản lý'],
-                  ['rank', 'Cấp bậc'],
-                  ['position', 'Chức vụ'],
-                  ['department', 'Phòng/Ban'],
-                  ['location', 'Đơn vị'],
-                  ['militaryPostalCode', 'Mã BĐQS'],
-                  ['mobile', 'Số điện thoại'],
-                ] as const
-              ).map(([field, label]) => (
-                <div key={field} className="flex flex-col gap-2">
-                  <Label htmlFor={field}>{label}</Label>
-                  <Input
-                    id={field}
-                    placeholder={`Nhập ${label.toLowerCase()}...`}
-                    value={newContact[field]}
-                    onChange={(e) =>
-                      handleNewContactChange(
-                        field as keyof typeof newContact,
-                        e.target.value
-                      )
+              <form className="space-y-4">
+                {(
+                  [
+                    ['manager', 'Tên quản lý', true, 'input'],
+                    ['rank', 'Cấp bậc', true, 'select'],
+                    ['position', 'Chức vụ', false, 'input'],
+                    ['department', 'Phòng/Ban', false, 'select'],
+                    ['location', 'Đơn vị', false, 'select'],
+                    ['military_postal_code', 'Mã BĐQS', false, 'input'],
+                    ['mobile_no', 'Số điện thoại', true, 'input'],
+                    ['address', 'Địa chỉ', false, 'address'],
+                  ] as const
+                ).map(([field, label, required, type]) => (
+                  <div key={field} className="flex flex-col gap-2">
+                    <Label htmlFor={field}>
+                      {label}
+                      {required && <span className="text-destructive">*</span>}
+                    </Label>
+                    {type === 'select' ? (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {(formData.get(field)?.toString() || "Chọn...")}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Tìm kiếm..." />
+                            <CommandEmpty>Không tìm thấy.</CommandEmpty>
+                            <CommandGroup>
+                              {(field === 'department' ? departments :
+                                field === 'location' ? locations :
+                                field === 'rank' ? ranks : []).map((option: string) => (
+                                <CommandItem
+                                  key={option}
+                                  value={option}
+                                  onSelect={(currentValue) => {
+                                    const input = document.createElement('input')
+                                    input.type = 'hidden'
+                                    input.name = field
+                                    input.value = currentValue
+                                    const form = document.querySelector('form')
+                                    if (form) {
+                                      form.appendChild(input)
+                                      const newFormData = new FormData(form)
+                                      setFormData(newFormData)
+                                    }
+                                  }}
+                                >
+                                  <CheckIcon
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      formData.get(field) === option ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {option}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    ) : type === 'address' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          id={field}
+                          name={field}
+                          placeholder={`Nhập ${label.toLowerCase()}...`}
+                          className={required ? 'border-primary' : ''}
+                        />
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => setIsAddressDialogOpen(true)}
+                        >
+                          <MapPin className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Input
+                        id={field}
+                        name={field}
+                        placeholder={`Nhập ${label.toLowerCase()}...`}
+                        className={required ? 'border-primary' : ''}
+                      />
+                    )}
+                  </div>
+                ))}
+              </form>
+              <AddressDialog
+                isOpen={isAddressDialogOpen}
+                onClose={() => setIsAddressDialogOpen(false)}
+                onSave={(address) => {
+                  const input = document.querySelector(`input[name="address"]`) as HTMLInputElement
+                  if (input) {
+                    input.value = address
+                    const form = document.querySelector('form')
+                    if (form) {
+                      const newFormData = new FormData(form)
+                      setFormData(newFormData)
                     }
-                  />
-                </div>
-              ))}
+                  }
+                }}
+              />
             </AddDialog>
-
+          )}
+          {hasPermission('IMPORT_CONTACTS') && (
             <InputExcel
               onImport={(rows) => {
                 setContacts((prev) => {
@@ -271,29 +375,34 @@ export default function ContactPage() {
                     (max, contact) => Math.max(max, contact.id),
                     0
                   )
-
-                  const mapped = rows.map((row, i) => ({
+                  const mapped: Contact[] = rows.map((row, i) => ({
                     id: maxId + i + 1,
-                    name: row.name || row['Họ tên'] || '',
                     rank: row.rank || row['Cấp bậc'] || '',
                     position: row.position || row['Chức vụ'] || '',
+                    manager: row.manager || row['Quản lý'] || '',
                     department: row.department || row['Phòng/Ban'] || '',
                     location: row.location || row['Đơn vị'] || '',
-                    manager: row.manager || row['Quản lý'] || '',
-                    militaryPostalCode:
-                      row.militaryPostalCode || row['Mã BĐQS'] || '',
-                    mobile: row.mobile || row['Số điện thoại'] || '',
+                    address: row.address || row['Địa chỉ'] || '',
+                    military_postal_code: row.military_postal_code || row['Mã BĐQS'] || '',
+                    mobile_no: row.mobile_no || row['Số điện thoại'] || '',
                   }))
-
                   return [...prev, ...mapped]
                 })
               }}
             />
-          </div>
+          )}
         </div>
-
-        <DataTable columns={columns} data={getFilteredContacts} />
       </div>
-    </SidebarInset>
+
+      <DataTable columns={columns} data={getFilteredContacts} />
+    </div>
+  )
+}
+
+export default function ContactsPage() {
+  return (
+    <ContactProvider>
+      <ContactsContent />
+    </ContactProvider>
   )
 }

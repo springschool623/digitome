@@ -5,6 +5,7 @@ export type Contact = {
     manager: string
     department: string
     location: string
-    militaryPostalCode: string
-    mobile: string
+    address: string
+    military_postal_code: string
+    mobile_no: string
   }

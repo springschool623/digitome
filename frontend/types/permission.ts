@@ -1,6 +1,6 @@
 export type Permission = {
     id: number
     code: string
-    name: string
-    category: string
+    permission_name: string
+    permission_category: string
   }

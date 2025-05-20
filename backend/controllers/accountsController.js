@@ -9,7 +9,7 @@ const SECRET_KEY = process.env.JWT_SECRET_KEY
 export const getAllAccounts = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT ma.id, mobile_phone, r.name, updated_at, created_by, status FROM military_account ma JOIN roles r ON ma.role_id = r.id ORDER BY id ASC'
+      'SELECT ma.id, mobile_no, role_name, updated_at, created_by, status FROM accounts ma JOIN roles r ON ma.role_id = r.id ORDER BY id ASC'
     )
     res.json(result.rows)
   } catch (error) {
@@ -19,15 +19,15 @@ export const getAllAccounts = async (req, res) => {
 
 // Đăng nhập tài khoản
 export const loginAccount = async (req, res) => {
-  const { mobile_phone, password } = req.body
+  const { mobile_no, password } = req.body
 
   try {
     const result = await pool.query(
-      `SELECT ma.*, r.name AS role_name 
-   FROM military_account ma 
+      `SELECT ma.*, role_name 
+   FROM accounts ma 
    JOIN roles r ON ma.role_id = r.id 
-   WHERE ma.mobile_phone = $1`,
-      [mobile_phone]
+   WHERE ma.mobile_no = $1`,
+      [mobile_no]
     )
 
     if (result.rows.length === 0) {
@@ -52,7 +52,7 @@ export const loginAccount = async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
-        mobile_phone: user.mobile_phone,
+        mobile_no: user.mobile_no,
         role: user.role_name, // dùng role_name thay vì user_role
       },
       SECRET_KEY,
@@ -65,7 +65,7 @@ export const loginAccount = async (req, res) => {
       token,
       user: {
         id: user.id,
-        mobile_phone: user.mobile_phone,
+        mobile_no: user.mobile_no,
         role: user.role_name, // dùng đúng tên đã mã hóa
       },
     })

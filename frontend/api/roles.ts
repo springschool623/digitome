@@ -44,8 +44,8 @@ export const getRoles = async () => {
 }
 
 export const createRole = async (role: {
-  name: string
-  description: string
+  role_name: string
+  role_description: string
 }) => {
   try {
     const res = await fetch('http://localhost:5000/api/roles', {

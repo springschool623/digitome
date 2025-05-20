@@ -44,7 +44,7 @@ export const getAccounts = async () => {
 }
 
 export const createAccount = async (account: {
-  mobile_phone: string
+  mobile_no: string
   password: string
   role_id: string
   updated_at: string

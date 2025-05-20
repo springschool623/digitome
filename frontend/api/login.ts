@@ -5,21 +5,21 @@ import { toast } from 'sonner'
 export interface LoginResponse {
   user: {
     id: number
-    mobile_phone: string
+    mobile_no: string
     role: string
   }
   token: string
 }
 
 export const login = async (
-  mobile_phone: string,
+  mobile_no: string, 
   password: string
 ): Promise<LoginResponse> => {
   try {
     const response = await fetch('http://localhost:5000/api/accounts/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobile_phone, password }),
+      body: JSON.stringify({ mobile_no, password }),
     })
 
     const data = await response.json()

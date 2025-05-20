@@ -2,7 +2,7 @@ import { pool } from '../db.js'
 
 export const getAllContacts = async (req, res) => {
   const result = await pool.query(
-    'SELECT * FROM military_contacts ORDER BY id ASC'
+    'SELECT * FROM contacts ORDER BY id ASC'
   )
   res.json(result.rows)
 }
@@ -10,7 +10,7 @@ export const getAllContacts = async (req, res) => {
 export const getContact = async (req, res) => {
   const { id } = req.params
   const result = await pool.query(
-    'SELECT * FROM military_contacts WHERE id = $1',
+    'SELECT * FROM contacts WHERE id = $1',
     [id]
   )
   
@@ -28,12 +28,13 @@ export const createContact = async (req, res) => {
     manager,
     department,
     location,
-    militarypostalcode,
-    mobile,
+    address,
+    military_postal_code,
+    mobile_no,
   } = req.body
   const result = await pool.query(
-    'INSERT INTO military_contacts (rank, position, manager, department, location, militarypostalcode, mobile) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-    [rank, position, manager, department, location, militarypostalcode, mobile]
+    'INSERT INTO contacts (rank, position, manager, department, location, address, military_postal_code, mobile_no) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+    [rank, position, manager, department, location, address, military_postal_code, mobile_no]
   )
   res.status(201).json(result.rows[0])
 }
@@ -46,20 +47,22 @@ export const updateContact = async (req, res) => {
     manager,
     department,
     location,
-    militarypostalcode,
-    mobile,
+    address,
+    military_postal_code, 
+    mobile_no,
   } = req.body
 
   const result = await pool.query(
-    `UPDATE military_contacts 
+    `UPDATE contacts 
      SET rank = $1, 
          position = $2, 
          manager = $3, 
          department = $4, 
          location = $5, 
-         militarypostalcode = $6, 
-         mobile = $7
-     WHERE id = $8 
+         address = $6,
+         military_postal_code = $7, 
+         mobile_no = $8
+     WHERE id = $9 
      RETURNING *`,
     [
       rank,
@@ -67,8 +70,9 @@ export const updateContact = async (req, res) => {
       manager,
       department,
       location,
-      militarypostalcode,
-      mobile,
+      address,
+      military_postal_code,
+      mobile_no,
       id,
     ]
   )
@@ -83,5 +87,5 @@ export const updateContact = async (req, res) => {
 export const deleteContact = async (req, res) => {
   const { id } = req.params
   await pool.query('DELETE FROM contacts WHERE id=$1', [id])
-  res.json({ message: 'Deleted' })
+  res.json({ message: 'Xóa liên hệ thành công' })
 }

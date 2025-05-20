@@ -1,12 +1,8 @@
 'use client'
+import { User } from '@/types/user'
 import { useState, useEffect } from 'react'
 
 export const useUser = () => {
-  type User = {
-    id: number
-    mobile_phone: string
-    role: string
-  }
 
   const [user, setUser] = useState<User | null>(null)
 

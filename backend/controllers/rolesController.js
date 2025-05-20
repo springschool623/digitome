@@ -8,20 +8,20 @@ export const getAllRoles = async (req, res) => {
   }
 
 export const createRole = async (req, res) => {
-    const { name, description } = req.body
+    const { role_name, role_description } = req.body
     const result = await pool.query(
-      'INSERT INTO roles (name, description) VALUES ($1, $2) RETURNING *',
-      [name, description]
+      'INSERT INTO roles (role_name, role_description) VALUES ($1, $2) RETURNING *',
+      [role_name, role_description]
     )
     res.status(201).json(result.rows[0])
   }
 
 export const updateRole = async (req, res) => {
     const { id } = req.params
-    const { name, description } = req.body
+    const { role_name, role_description } = req.body
     const result = await pool.query(
-      'UPDATE roles SET name = $1, description = $2 WHERE id = $3 RETURNING *',
-      [name, description, id]
+      'UPDATE roles SET role_name = $1, role_description = $2 WHERE id = $3 RETURNING *',
+      [role_name, role_description, id]
     )
     res.json(result.rows[0])
   }

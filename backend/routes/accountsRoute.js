@@ -7,7 +7,8 @@ import { authorizeRoles } from '../authorizeRoles.js'
 
 const router = express.Router()
 
-router.get('/', authorizeRoles('administrator'), getAllAccounts)
+// router.get('/', authorizeRoles('administrator'), getAllAccounts)
+router.get('/', getAllAccounts)
 router.post('/login', loginAccount)
 
 export default router

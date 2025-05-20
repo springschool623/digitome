@@ -1,7 +1,9 @@
 // src/api/contacts.ts
 
+import { Contact } from '@/types/contact'
 import { toast } from 'sonner'
 
+// Lấy danh sách liên hệ
 export const getContacts = async () => {
   try {
     const res = await fetch('http://localhost:5000/api/contacts')
@@ -13,6 +15,7 @@ export const getContacts = async () => {
   }
 }
 
+// Lấy thông tin liên hệ cụ thể bằng id
 export const getContact = async (id: number) => {
   try {
     const res = await fetch(`http://localhost:5000/api/contacts/${id}`)
@@ -24,22 +27,15 @@ export const getContact = async (id: number) => {
   }
 }
 
-export const createContact = async (contact: {
-  rank: string
-  position: string
-  manager: string
-  department: string
-  location: string
-  militaryPostalCode: string
-  mobile: string
-}) => {
+// Tạo liên hệ mới
+export const createContact = async (contact: Omit<Contact, 'id'>) => {
   try {
     const res = await fetch('http://localhost:5000/api/contacts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...contact,
-        militaryportalcode: contact.militaryPostalCode, // chú ý tên field backend yêu cầu
+        military_postal_code: contact.military_postal_code, // chú ý tên field backend yêu cầu
       }),
     })
 
@@ -61,17 +57,10 @@ export const createContact = async (contact: {
   }
 }
 
+// Cập nhật liên hệ
 export const updateContact = async (
   id: number,
-  contact: {
-    rank: string
-    position: string
-    manager: string
-    department: string
-    location: string
-    militaryPostalCode: string
-    mobile: string
-  }
+  contact: Contact
 ) => {
   try {
     const res = await fetch(`http://localhost:5000/api/contacts/${id}`, {
@@ -79,7 +68,6 @@ export const updateContact = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...contact,
-        militaryportalcode: contact.militaryPostalCode, // chú ý tên field backend yêu cầu
       }),
     })
 
@@ -97,6 +85,30 @@ export const updateContact = async (
     return data
   } catch (error) {
     console.error('Lỗi khi cập nhật liên hệ:', error)
+    throw error
+  }
+}
+
+// Xóa liên hệ
+export const deleteContact = async (id: number) => {
+  try {
+    const res = await fetch(`http://localhost:5000/api/contacts/${id}`, {
+      method: 'DELETE',
+    })
+
+    if (!res.ok) {
+      toast.error('Xóa liên hệ thất bại!', {
+        style: {
+          background: 'red',
+          color: '#fff',
+        },
+        duration: 3000,
+      })
+      throw new Error('Xóa liên hệ thất bại')
+    }
+    return await res.json()
+  } catch (error) {
+    console.error('Lỗi khi xóa liên hệ:', error)
     throw error
   }
 }

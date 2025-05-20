@@ -5,12 +5,15 @@ import * as XLSX from 'xlsx'
 import { ContactExcelRow } from '@/lib/ContactExcelRow'
 import React from 'react'
 import { toast } from 'sonner' // hoặc react-toastify tùy bạn
+import { useContact } from '@/contexts/ContactContext'
 
 interface InputExcelProps {
   onImport: (data: ContactExcelRow[]) => void
 }
 
 export default function InputExcel({ onImport }: InputExcelProps) {
+  const { addContacts } = useContact()
+
   const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -55,8 +58,9 @@ export default function InputExcel({ onImport }: InputExcelProps) {
           department: row.department || row['Phòng/Ban'] || '',
           location: row.location || row['Đơn vị'] || '',
           manager: row.manager || row['Quản lý'] || '',
-          militaryPostalCode: row.militaryPostalCode || row['Mã BĐQS'] || '',
-          mobile: row.mobile || row['Số điện thoại'] || '',
+          military_postal_code: row.military_postal_code || row['Mã BĐQS'] || '',
+          address: row.address || row['Địa chỉ'] || '',
+          mobile_no: row.mobile_no || row['Số điện thoại'] || '',
         }))
 
         if (importedContacts.every((c) => !c.name)) {
@@ -70,6 +74,8 @@ export default function InputExcel({ onImport }: InputExcelProps) {
           return
         }
 
+        // Add imported contacts to context
+        addContacts(importedContacts)
         onImport(importedContacts)
         toast.success(`Nhập thành công ${importedContacts.length} liên hệ.`, {
           style: {

@@ -1,4 +1,4 @@
-type ContactExcelRow = {
+export type ContactExcelRow = {
   name?: string
   'Họ tên'?: string
   rank?: string
@@ -11,10 +11,10 @@ type ContactExcelRow = {
   'Đơn vị'?: string
   manager?: string
   'Quản lý'?: string
-  militaryPostalCode?: string
+  military_postal_code?: string
   'Mã BĐQS'?: string
-  mobile?: string
+  mobile_no?: string
   'Số điện thoại'?: string
+  address?: string
+  'Địa chỉ'?: string
 }
-
-export type { ContactExcelRow }

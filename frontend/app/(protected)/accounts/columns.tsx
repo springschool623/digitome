@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react'
 import { getPermissions } from '@/api/permissions'
 import { Label } from '@/components/ui/label'
 import { Permission } from '@/types/permission'
+import { usePermission } from '@/hooks/usePermission'
 
 export const accountColumns: ColumnDef<Account>[] = [
   {
@@ -58,7 +59,7 @@ export const accountColumns: ColumnDef<Account>[] = [
     header: 'ID',
   },
   {
-    accessorKey: 'mobile_phone',
+    accessorKey: 'mobile_no',
     header: 'SĐT',
   },
   {
@@ -67,10 +68,10 @@ export const accountColumns: ColumnDef<Account>[] = [
     cell: () => <span className="italic text-muted-foreground">••••••••</span>, // Ẩn mật khẩu
   },
   {
-    accessorKey: 'name',
+    accessorKey: 'role_name',
     header: 'Quyền',
     cell: ({ row }) => {
-      const name = row.getValue('name') as string
+      const name = row.getValue('role_name') as string
       return <span className="uppercase">{name}</span>
     },
   },
@@ -129,29 +130,37 @@ export const accountColumns: ColumnDef<Account>[] = [
     },
   },
   {
-    id: 'actions',   
+    id: 'actions',
     header: 'Hành động',
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-            size="icon"
-          >
-            <MoreVerticalIcon />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Chỉnh sửa</DropdownMenuItem>
-          <DropdownMenuItem>Nhân bản</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Vô hiệu hóa</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
+    cell: () => {
+      const { hasPermission } = usePermission()
+      const canEdit = hasPermission('EDIT_ACCOUNTS')
+      const canDelete = hasPermission('DELETE_ACCOUNTS')
+  
+      if (!canEdit && !canDelete) return null
+  
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+              size="icon"
+            >
+              <MoreVerticalIcon />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            {canEdit && <DropdownMenuItem>Chỉnh sửa</DropdownMenuItem>}
+            {canEdit && canDelete && <DropdownMenuSeparator />}
+            {canDelete && <DropdownMenuItem>Vô hiệu hóa</DropdownMenuItem>}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+  }
+  
 ]
 
 export const roleColumns: ColumnDef<Role>[] = [
@@ -186,24 +195,28 @@ export const roleColumns: ColumnDef<Role>[] = [
     header: 'ID',
   },
   {
-    accessorKey: 'name',
+    accessorKey: 'role_name',
     header: 'Tên quyền',
     cell: ({ row }) => {
-      const name = row.getValue('name') as string
+      const name = row.getValue('role_name') as string
       return <span className="uppercase">{name}</span>
     },
   },
   {
-    accessorKey: 'description',
+    accessorKey: 'role_description',
     header: 'Mô tả',
   },
   {
     id: 'actions',
     header: 'Hành động',
     cell: ({ row }) => {
-      const name = row.getValue('name') as string
+      const name = row.getValue('role_name') as string
       const [permissions, setPermissions] = useState<Permission[]>([])
       const [selectedPermissions, setSelectedPermissions] = useState<number[]>([])
+      const { hasPermission } = usePermission()
+      const canEdit = hasPermission('EDIT_ROLES')
+      const canAssignPermissions = hasPermission('ASSIGN_ROLES')
+
 
       useEffect(() => {
         const fetchPermissions = async () => {
@@ -227,7 +240,7 @@ export const roleColumns: ColumnDef<Role>[] = [
 
       // Group permissions by category
       const groupedPermissions = permissions.reduce((acc, permission) => {
-        const category = permission.category
+        const category = permission.permission_category
         if (!acc[category]) {
           acc[category] = []
         }
@@ -236,18 +249,22 @@ export const roleColumns: ColumnDef<Role>[] = [
       }, {} as Record<string, Permission[]>)
 
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">            
+        {canEdit && (
           <Button variant="outline" size="sm" className='bg-yellow-500 text-white hover:text-white hover:bg-yellow-600'>
             <Edit/>
             <span>Sửa</span>
           </Button>
+          )}
           <Dialog>
+            {canAssignPermissions && (
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 <Plus/>
                 <span>Chức năng</span>
               </Button>
             </DialogTrigger>
+            )}
             <DialogContent className="max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className='font-bold border-b pb-4'>Cập nhật chức năng cho quyền: <span className='uppercase'>{name}</span></DialogTitle>
@@ -266,7 +283,7 @@ export const roleColumns: ColumnDef<Role>[] = [
                           />
                           <div className="flex flex-col gap-1">
                             <Label htmlFor={`permission-${permission.id}`} className="flex flex-col">
-                              <span className="text-sm text-muted-foreground">{permission.name}</span>
+                              <span className="text-sm text-muted-foreground">{permission.permission_name}</span>
                             </Label>
                           </div>
                         </div>

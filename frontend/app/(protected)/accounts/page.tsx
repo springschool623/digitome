@@ -17,6 +17,7 @@ import { Role } from '@/types/role'
 import { getRoles, createRole } from '@/api/roles'
 import { TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tabs } from '@/components/ui/tabs'
+import { usePermission } from '@/hooks/usePermission'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
@@ -25,7 +26,7 @@ const breadcrumbs = [
 ]
 
 const initialNewAccount: Omit<Account, 'id'> = {
-  mobile_phone: '',
+  mobile_no: '',
   password: '',
   role_id: '',
   updated_at: '',
@@ -34,11 +35,12 @@ const initialNewAccount: Omit<Account, 'id'> = {
 }
 
 const initialNewRole: Omit<Role, 'id'> = {
-  name: '',
-  description: '',
+  role_name: '',
+  role_description: '',
 }
 
 export default function AccountPage() {
+  const { hasPermission } = usePermission()
   const [search, setSearch] = useState('')
   const [accounts, setAccounts] = useState<Account[]>([])
   const [newAccount, setNewAccount] = useState<Omit<Account, 'id'>>(initialNewAccount)
@@ -67,7 +69,7 @@ export default function AccountPage() {
   }
 
   const handleCreateRole = async () => {
-    if (!newRole.name.trim()) {
+    if (!newRole.role_name.trim()) {
       toast.error('Tên quyền là bắt buộc!', {
         style: { background: 'red', color: '#fff' },
         duration: 3000,
@@ -95,7 +97,7 @@ export default function AccountPage() {
 
   const getFilteredAccounts = useMemo(() => {
     return accounts.filter((c) =>
-      [c.mobile_phone, c.role_id, c.status, c.created_by, c.updated_at]
+      [c.mobile_no, c.role_id, c.status, c.created_by, c.updated_at]
         .filter(Boolean)
         .some((val) => val.toLowerCase().includes(search.toLowerCase()))
     )
@@ -118,60 +120,76 @@ export default function AccountPage() {
               className="w-80"
             />
             <div className='flex gap-2'>
-              <Button variant="outline" className='bg-blue-500 text-white hover:bg-blue-600 hover:text-white'>
-                <Plus />
-                Cấp quyền tài khoản
-              </Button>
-              <AddDialog
-                title="Thêm quyền mới"
-                open={openAddRoleDialog}
-                onOpenChange={setOpenAddRoleDialog}
-                footer={
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={() => setNewRole(initialNewRole)}
-                    >
-                      Làm mới
-                      <RefreshCcw className="ml-2 h-4 w-4" />
-                    </Button>
-                    <Button
-                      className="bg-green-500 text-white hover:bg-green-600"
-                      onClick={handleCreateRole}
-                    >
-                      Lưu
-                    </Button>
-                  </>
-                }
-              >
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="name">Tên quyền</Label>
-                    <Input
-                      id="name"
-                      placeholder="Nhập tên quyền..."
-                      value={newRole.name}
-                      onChange={(e) => updateNewRole('name', e.target.value)}
-                    />
+              {hasPermission('ASSIGN_ROLES') && (
+                <Button variant="outline" className='bg-blue-500 text-white hover:bg-blue-600 hover:text-white'>
+                  <Plus />
+                  Cấp quyền tài khoản
+                </Button>
+              )}
+              {hasPermission('CREATE_ROLES') && (
+                <AddDialog
+                  title="Thêm quyền mới"
+                  open={openAddRoleDialog}
+                  onOpenChange={setOpenAddRoleDialog}
+                  footer={
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => setNewRole(initialNewRole)}
+                      >
+                        Làm mới
+                        <RefreshCcw className="ml-2 h-4 w-4" />
+                      </Button>
+                      <Button
+                        className="bg-green-500 text-white hover:bg-green-600"
+                        onClick={handleCreateRole}
+                      >
+                        Lưu
+                      </Button>
+                    </>
+                  }
+                >
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="name">Tên quyền</Label>
+                      <Input
+                        id="name"
+                        placeholder="Nhập tên quyền..."
+                        value={newRole.role_name}
+                        onChange={(e) => updateNewRole('role_name', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="description">Mô tả</Label>
+                      <Input
+                        id="description"
+                        placeholder="Nhập mô tả..."
+                        value={newRole.role_description}
+                        onChange={(e) => updateNewRole('role_description', e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="description">Mô tả</Label>
-                    <Input
-                      id="description"
-                      placeholder="Nhập mô tả..."
-                      value={newRole.description}
-                      onChange={(e) => updateNewRole('description', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </AddDialog>
+                </AddDialog>
+              )}
             </div>
           </div>
           <TabsContent value="accounts">
-            <DataTable columns={accountColumns} data={getFilteredAccounts} />
+            {hasPermission('VIEW_ACCOUNTS') ? (
+              <DataTable columns={accountColumns} data={getFilteredAccounts} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Bạn không có quyền xem danh sách tài khoản
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="roles">
-            <DataTable columns={roleColumns} data={roles} />
+            {hasPermission('VIEW_ROLES') ? (
+              <DataTable columns={roleColumns} data={roles} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Bạn không có quyền xem danh sách quyền
+              </div>
+            )}
           </TabsContent>
         </div>
       </Tabs>
