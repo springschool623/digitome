@@ -1,75 +1,91 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { Contact } from '@/types/contact'
-import { getContacts } from '@/api/contacts'
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { getDepartments } from '@/api/departments'
+import { getLocations } from '@/api/locations'
+import { getRanks } from '@/api/ranks'
+import { getPositions } from '@/api/positions'
 
 interface ContactContextType {
-  departments: string[]
-  locations: string[]
-  ranks: string[]
-  addContact: (contact: Contact) => void
-  addContacts: (contacts: Omit<Contact, 'id'>[]) => void
-  initializeData: () => Promise<void>
+  departments: { id: number; name: string }[]
+  locations: { id: number; name: string }[]
+  ranks: { id: number; name: string }[]
+  positions: { id: number; name: string }[]
+  loading: boolean
+  error: string | null
 }
 
-const ContactContext = createContext<ContactContextType | undefined>(undefined)
+const ContactContext = createContext<ContactContextType>({
+  departments: [],
+  locations: [],
+  ranks: [],
+  positions: [],
+  loading: false,
+  error: null,
+})
 
 export function ContactProvider({ children }: { children: React.ReactNode }) {
-  const [departments, setDepartments] = useState<string[]>([])
-  const [locations, setLocations] = useState<string[]>([])
-  const [ranks, setRanks] = useState<string[]>([])
-
-  const updateUniqueValues = (contacts: Omit<Contact, 'id'>[]) => {
-    const uniqueDepartments = Array.from(new Set(contacts.map(c => c.department).filter(Boolean)))
-    const uniqueLocations = Array.from(new Set(contacts.map(c => c.location).filter(Boolean)))
-    const uniqueRanks = Array.from(new Set(contacts.map(c => c.rank).filter(Boolean)))
-
-    setDepartments(uniqueDepartments)
-    setLocations(uniqueLocations)
-    setRanks(uniqueRanks)
-  }
-
-  const addContact = (contact: Contact) => {
-    if (contact.department && !departments.includes(contact.department)) {
-      setDepartments(prev => [...prev, contact.department])
-    }
-    if (contact.location && !locations.includes(contact.location)) {
-      setLocations(prev => [...prev, contact.location])
-    }
-    if (contact.rank && !ranks.includes(contact.rank)) {
-      setRanks(prev => [...prev, contact.rank])
-    }
-  }
-
-  const addContacts = (contacts: Omit<Contact, 'id'>[]) => {
-    updateUniqueValues(contacts)
-  }
-
-  const initializeData = async () => {
-    try {
-      const contacts = await getContacts()
-      updateUniqueValues(contacts)
-    } catch (error) {
-      console.error('Lỗi khi khởi tạo dữ liệu:', error)
-    }
-  }
+  const [departments, setDepartments] = useState<
+    { id: number; name: string }[]
+  >([])
+  const [locations, setLocations] = useState<{ id: number; name: string }[]>([])
+  const [ranks, setRanks] = useState<{ id: number; name: string }[]>([])
+  const [positions, setPositions] = useState<{ id: number; name: string }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    initializeData()
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [departmentsData, locationsData, ranksData, positionsData] =
+          await Promise.all([
+            getDepartments(),
+            getLocations(),
+            getRanks(),
+            getPositions(),
+          ])
+
+        // console.log('departmentsData:', departmentsData)
+        // console.log('locationsData:', locationsData)
+        // console.log('ranksData:', ranksData)
+        // console.log('positionsData:', positionsData)
+
+        setDepartments(departmentsData)
+        setLocations(locationsData)
+        setRanks(ranksData)
+        setPositions(positionsData)
+      } catch (err) {
+        console.error('Error fetching data:', err)
+        setError('Failed to fetch data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, [])
 
   return (
-    <ContactContext.Provider value={{ departments, locations, ranks, addContact, addContacts, initializeData }}>
+    <ContactContext.Provider
+      value={{
+        departments,
+        locations,
+        ranks,
+        positions,
+        loading,
+        error,
+      }}
+    >
       {children}
     </ContactContext.Provider>
   )
 }
 
-export function useContact() {
+export const useContact = () => {
   const context = useContext(ContactContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useContact must be used within a ContactProvider')
   }
   return context
-} 
+}

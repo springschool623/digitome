@@ -11,7 +11,7 @@ import AddDialog from '@/components/AddDialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { createAccount, getAccounts } from '@/api/accounts'
+import { getAccounts } from '@/api/accounts'
 import { Account } from '@/types/account'
 import { Role } from '@/types/role'
 import { getRoles, createRole } from '@/api/roles'
@@ -25,15 +25,6 @@ const breadcrumbs = [
   { label: 'Danh sách tài khoản' },
 ]
 
-const initialNewAccount: Omit<Account, 'id'> = {
-  mobile_no: '',
-  password: '',
-  role_id: '',
-  updated_at: '',
-  created_by: '',
-  status: '',
-}
-
 const initialNewRole: Omit<Role, 'id'> = {
   role_name: '',
   role_description: '',
@@ -43,9 +34,7 @@ export default function AccountPage() {
   const { hasPermission } = usePermission()
   const [search, setSearch] = useState('')
   const [accounts, setAccounts] = useState<Account[]>([])
-  const [newAccount, setNewAccount] = useState<Omit<Account, 'id'>>(initialNewAccount)
   const [newRole, setNewRole] = useState<Omit<Role, 'id'>>(initialNewRole)
-  const [openAddDialog, setOpenAddDialog] = useState(false)
   const [openAddRoleDialog, setOpenAddRoleDialog] = useState(false)
   const [roles, setRoles] = useState<Role[]>([])
 
@@ -66,6 +55,12 @@ export default function AccountPage() {
 
   const updateNewRole = (field: keyof typeof newRole, value: string) => {
     setNewRole((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleStatusChange = (id: number, newStatus: string) => {
+    setAccounts((prev) =>
+      prev.map((acc) => (acc.id === id ? { ...acc, status: newStatus } : acc))
+    )
   }
 
   const handleCreateRole = async () => {
@@ -119,9 +114,12 @@ export default function AccountPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="w-80"
             />
-            <div className='flex gap-2'>
+            <div className="flex gap-2">
               {hasPermission('ASSIGN_ROLES') && (
-                <Button variant="outline" className='bg-blue-500 text-white hover:bg-blue-600 hover:text-white'>
+                <Button
+                  variant="outline"
+                  className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
+                >
                   <Plus />
                   Cấp quyền tài khoản
                 </Button>
@@ -156,7 +154,9 @@ export default function AccountPage() {
                         id="name"
                         placeholder="Nhập tên quyền..."
                         value={newRole.role_name}
-                        onChange={(e) => updateNewRole('role_name', e.target.value)}
+                        onChange={(e) =>
+                          updateNewRole('role_name', e.target.value)
+                        }
                       />
                     </div>
                     <div className="flex flex-col gap-2">
@@ -165,7 +165,9 @@ export default function AccountPage() {
                         id="description"
                         placeholder="Nhập mô tả..."
                         value={newRole.role_description}
-                        onChange={(e) => updateNewRole('role_description', e.target.value)}
+                        onChange={(e) =>
+                          updateNewRole('role_description', e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -175,7 +177,10 @@ export default function AccountPage() {
           </div>
           <TabsContent value="accounts">
             {hasPermission('VIEW_ACCOUNTS') ? (
-              <DataTable columns={accountColumns} data={getFilteredAccounts} />
+              <DataTable
+                columns={accountColumns(hasPermission, handleStatusChange)}
+                data={getFilteredAccounts}
+              />
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 Bạn không có quyền xem danh sách tài khoản

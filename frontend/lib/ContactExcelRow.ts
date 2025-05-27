@@ -1,13 +1,13 @@
 export type ContactExcelRow = {
   name?: string
   'Họ tên'?: string
-  rank?: string
+  rank_name?: string
   'Cấp bậc'?: string
-  position?: string
+  position_name?: string
   'Chức vụ'?: string
-  department?: string
+  department_name?: string
   'Phòng/Ban'?: string
-  location?: string
+  location_name?: string
   'Đơn vị'?: string
   manager?: string
   'Quản lý'?: string

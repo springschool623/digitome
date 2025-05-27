@@ -1,18 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { SidebarInset } from '@/components/ui/sidebar'
-import Header from '@/components/PageHeader'
 import { toast } from 'sonner'
-import { getContact, updateContact } from '@/api/contacts'
-import { Loader2, ArrowLeft, MapPin } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Contact } from '@/types/contact'
-import React from 'react'
+import { createContact } from '@/api/contacts'
 import { useContact, ContactProvider } from '@/contexts/ContactContext'
 import {
   Command,
@@ -26,37 +20,42 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { Check, ChevronsUpDown } from 'lucide-react'
+import { Check, ChevronsUpDown, MapPin, ArrowLeft, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AddressDialog } from '@/components/AddressDialog'
+import Header from '@/components/PageHeader'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SidebarInset } from '@/components/ui/sidebar'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
   { label: 'Danh bạ điện thoại', href: 'contacts' },
-  { label: 'Chỉnh sửa liên hệ' },
+  { label: 'Thêm liên hệ mới' },
 ]
 
-function EditContactContent({ id }: { id: string }) {
+function CreateContactContent() {
   const router = useRouter()
-  const [contact, setContact] = useState<Contact | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [openSelect, setOpenSelect] = useState<string | null>(null)
-  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false)
-  const {
-    departments,
-    locations,
-    ranks,
-    positions,
-    loading: contextLoading,
-    error: contextError,
-  } = useContact()
+  const [formData, setFormData] = useState({
+    manager: '',
+    rank_id: 0,
+    position_id: 0,
+    department_id: 0,
+    location_id: 0,
+    address: '',
+    military_postal_code: '',
+    mobile_no: '',
+  })
   const [displayNames, setDisplayNames] = useState<Record<string, string>>({
     rank_name: '',
     position_name: '',
     department_name: '',
     location_name: '',
   })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false)
+  const [openSelect, setOpenSelect] = useState<string | null>(null)
+  const { departments, locations, ranks, positions, loading, error } =
+    useContact()
 
   type DisplayField =
     | 'rank_name'
@@ -64,75 +63,42 @@ function EditContactContent({ id }: { id: string }) {
     | 'department_name'
     | 'location_name'
 
-  useEffect(() => {
-    const fetchContact = async () => {
-      try {
-        const data = await getContact(parseInt(id))
-        setContact(data)
-      } catch (error) {
-        console.error('Lỗi khi lấy thông tin liên hệ:', error)
-        toast.error('Không thể lấy thông tin liên hệ!')
-      } finally {
-        setLoading(false)
+  const validateField = (field: keyof typeof formData, value: string) => {
+    let error = ''
+
+    if (field === 'manager' && !value.trim()) {
+      error = 'Tên quản lý là bắt buộc'
+    } else if (field === 'rank_id' && !value.trim()) {
+      error = 'Cấp bậc là bắt buộc'
+    } else if (field === 'mobile_no') {
+      if (!value.trim()) {
+        error = 'Số điện thoại là bắt buộc'
+      } else if (!/^[0-9]{10,11}$/.test(value)) {
+        error = 'Số điện thoại phải có 10-11 chữ số'
       }
     }
 
-    fetchContact()
-  }, [id])
-  // ... existing code ...
-  useEffect(() => {
-    const fetchContact = async () => {
-      try {
-        const data = await getContact(parseInt(id))
-        setContact(data)
-      } catch (error) {
-        console.error('Lỗi khi lấy thông tin liên hệ:', error)
-        toast.error('Không thể lấy thông tin liên hệ!')
-      } finally {
-        setLoading(false)
-      }
-    }
+    setErrors((prev) => ({ ...prev, [field]: error }))
+    return !error
+  }
 
-    fetchContact()
-  }, [id])
-
-  // Add new effect to update displayNames when contact is loaded
-  useEffect(() => {
-    if (contact) {
-      const newDisplayNames: Record<string, string> = {}
-
-      // Update rank name
-      const rank = ranks.find((r) => r.id === contact.rank_id)
-      if (rank) newDisplayNames.rank_name = rank.name
-
-      // Update position name
-      const position = positions.find((p) => p.id === contact.position_id)
-      if (position) newDisplayNames.position_name = position.name
-
-      // Update department name
-      const department = departments.find((d) => d.id === contact.department_id)
-      if (department) newDisplayNames.department_name = department.name
-
-      // Update location name
-      const location = locations.find((l) => l.id === contact.location_id)
-      if (location) newDisplayNames.location_name = location.name
-
-      setDisplayNames(newDisplayNames)
-    }
-  }, [contact, ranks, positions, departments, locations])
-  // ... existing code ...
-  const handleChange = (field: keyof Contact, value: string | number) => {
-    if (contact) {
-      setContact({ ...contact, [field]: value })
-    }
+  const handleChange = (
+    field: keyof typeof formData,
+    value: string | number
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    validateField(field, value.toString())
   }
 
   const handleSubmit = async () => {
-    if (!contact) return
+    // Validate tất cả các trường
+    const fields = Object.keys(formData) as Array<keyof typeof formData>
+    const isValid = fields.every((field) =>
+      validateField(field, formData[field].toString())
+    )
 
-    // Kiểm tra giá trị bắt buộc
-    if (!contact.manager.trim() || !contact.rank_id) {
-      toast.error('Tên quản lý và cấp bậc là bắt buộc!', {
+    if (!isValid) {
+      toast.error('Vui lòng kiểm tra lại thông tin!', {
         style: {
           background: 'red',
           color: '#fff',
@@ -142,26 +108,11 @@ function EditContactContent({ id }: { id: string }) {
       return
     }
 
-    // Kiểm tra định dạng số điện thoại
-    const phoneRegex = /^[0-9]{10,11}$/
-    if (!phoneRegex.test(contact.mobile_no)) {
-      toast.error(
-        'Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10-11 số.',
-        {
-          style: {
-            background: 'red',
-            color: '#fff',
-          },
-          duration: 3000,
-        }
-      )
-      return
-    }
+    // console.log('In data:', formData)
 
-    setSaving(true)
     try {
-      await updateContact(contact.id, contact)
-      toast.success('Cập nhật liên hệ thành công!', {
+      await createContact(formData)
+      toast.success('Thêm liên hệ thành công!', {
         style: {
           background: '#28a745',
           color: '#fff',
@@ -170,69 +121,38 @@ function EditContactContent({ id }: { id: string }) {
       })
       router.push('/contacts')
     } catch (error) {
-      console.error('Lỗi khi cập nhật liên hệ:', error)
-      toast.error('Đã xảy ra lỗi khi cập nhật liên hệ!', {
+      console.error('Lỗi khi gửi dữ liệu:', error)
+      toast.error('Đã xảy ra lỗi khi gửi dữ liệu!', {
         style: {
           background: 'red',
           color: '#fff',
         },
         duration: 3000,
       })
-    } finally {
-      setSaving(false)
     }
   }
 
-  const handleAddressSave = (newAddress: string) => {
-    if (contact) {
-      setContact({ ...contact, address: newAddress })
-    }
-  }
-
-  if (loading || contextLoading) {
+  if (loading) {
     return (
       <SidebarInset>
         <Header breadcrumbs={breadcrumbs} />
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">
-              Đang tải thông tin liên hệ...
-            </p>
+            <p className="text-muted-foreground">Đang tải dữ liệu...</p>
           </div>
         </div>
       </SidebarInset>
     )
   }
 
-  if (contextError) {
+  if (error) {
     return (
       <SidebarInset>
         <Header breadcrumbs={breadcrumbs} />
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
           <div className="flex flex-col items-center gap-4">
-            <p className="text-destructive text-lg">{contextError}</p>
-            <Button
-              variant="outline"
-              onClick={() => router.push('/contacts')}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Quay lại danh sách
-            </Button>
-          </div>
-        </div>
-      </SidebarInset>
-    )
-  }
-
-  if (!contact) {
-    return (
-      <SidebarInset>
-        <Header breadcrumbs={breadcrumbs} />
-        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-destructive text-lg">Không tìm thấy liên hệ</p>
+            <p className="text-destructive text-lg">{error}</p>
             <Button
               variant="outline"
               onClick={() => router.push('/contacts')}
@@ -254,7 +174,7 @@ function EditContactContent({ id }: { id: string }) {
         <div className="max-w-2xl mx-auto w-full">
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Thông tin liên hệ</CardTitle>
+              <CardTitle className="text-xl">Thêm liên hệ mới</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -290,7 +210,10 @@ function EditContactContent({ id }: { id: string }) {
                               variant="outline"
                               role="combobox"
                               aria-expanded={openSelect === field}
-                              className={cn('w-full justify-between')}
+                              className={cn(
+                                'w-full justify-between',
+                                errors[field] && 'border-destructive'
+                              )}
                             >
                               {displayNames[
                                 `${field.split('_')[0]}_name` as DisplayField
@@ -364,16 +287,24 @@ function EditContactContent({ id }: { id: string }) {
                           <Input
                             id={field}
                             placeholder={`Nhập ${label.toLowerCase()}...`}
-                            value={contact?.[field]}
+                            value={formData[field]}
                             onChange={(e) =>
                               handleChange(field, e.target.value)
                             }
-                            className={required ? 'border-primary' : ''}
+                            className={cn(
+                              'h-10 bg-white border-gray-300 focus:border-primary focus:ring-primary',
+                              errors[field] && 'border-destructive'
+                            )}
                           />
                           <Button
                             size="icon"
                             variant="outline"
-                            onClick={() => setIsAddressDialogOpen(true)}
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setIsAddressDialogOpen(true)
+                            }}
+                            className="h-10 w-10 border-gray-300 hover:bg-gray-50"
                           >
                             <MapPin className="h-4 w-4" />
                           </Button>
@@ -382,10 +313,18 @@ function EditContactContent({ id }: { id: string }) {
                         <Input
                           id={field}
                           placeholder={`Nhập ${label.toLowerCase()}...`}
-                          value={contact?.[field]}
+                          value={formData[field]}
                           onChange={(e) => handleChange(field, e.target.value)}
-                          className={required ? 'border-primary' : ''}
+                          className={cn(
+                            'h-10 bg-white border-gray-300 focus:border-primary focus:ring-primary',
+                            errors[field] && 'border-destructive'
+                          )}
                         />
+                      )}
+                      {errors[field] && (
+                        <span className="text-sm text-destructive">
+                          {errors[field]}
+                        </span>
                       )}
                     </div>
                   ))}
@@ -403,16 +342,8 @@ function EditContactContent({ id }: { id: string }) {
                   <Button
                     className="bg-green-700 text-white hover:bg-green-800 gap-2"
                     onClick={handleSubmit}
-                    disabled={saving}
                   >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Đang lưu...
-                      </>
-                    ) : (
-                      'Lưu thay đổi'
-                    )}
+                    Lưu
                   </Button>
                 </div>
               </div>
@@ -420,26 +351,22 @@ function EditContactContent({ id }: { id: string }) {
           </Card>
         </div>
       </div>
-      {contact && (
-        <AddressDialog
-          isOpen={isAddressDialogOpen}
-          onClose={() => setIsAddressDialogOpen(false)}
-          onSave={handleAddressSave}
-          initialAddress={contact.address}
-        />
-      )}
+
+      <AddressDialog
+        isOpen={isAddressDialogOpen}
+        onClose={() => setIsAddressDialogOpen(false)}
+        onSave={(address) => {
+          handleChange('address', address)
+        }}
+      />
     </SidebarInset>
   )
 }
 
-export default function EditContactPage(unwrappedProps: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = React.use(unwrappedProps.params)
-
+export default function CreateContactPage() {
   return (
     <ContactProvider>
-      <EditContactContent id={id} />
+      <CreateContactContent />
     </ContactProvider>
   )
 }

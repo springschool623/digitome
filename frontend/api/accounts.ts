@@ -76,3 +76,37 @@ export const createAccount = async (account: {
     throw error
   }
 }
+
+export const deleteAccount = async (id: number) => {
+  const token = getTokenFromCookie()
+
+  try {
+    const res = await fetch(`http://localhost:5000/api/accounts/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // ✅ Thêm token nếu có middleware auth ở backend
+      },
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      toast.error(data.message || 'Xóa tài khoản thất bại!', {
+        style: { background: 'red', color: '#fff' },
+        duration: 3000,
+      })
+      throw new Error(data.message || 'Xóa tài khoản thất bại')
+    }
+
+    toast.success('Tài khoản đã bị tạm ngưng!', {
+      style: { background: 'green', color: '#fff' },
+      duration: 3000,
+    })
+
+    return data
+  } catch (error) {
+    console.error('Lỗi khi xóa tài khoản:', error)
+    throw error
+  }
+}

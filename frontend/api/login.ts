@@ -12,7 +12,7 @@ export interface LoginResponse {
 }
 
 export const login = async (
-  mobile_no: string, 
+  mobile_no: string,
   password: string
 ): Promise<LoginResponse> => {
   try {
@@ -63,10 +63,10 @@ export const login = async (
 
     return data
   } catch (error) {
-    toast.error('Không thể kết nối đến máy chủ!', {
-      style: { background: '#dc2626', color: '#fff' },
-      duration: 3000,
-    })
+    // toast.error('Không thể kết nối đến máy chủ!', {
+    //   style: { background: '#dc2626', color: '#fff' },
+    //   duration: 3000,
+    // })
     console.error('Login API error:', error)
     throw error
   }

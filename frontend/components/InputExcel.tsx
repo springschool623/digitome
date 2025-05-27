@@ -12,8 +12,6 @@ interface InputExcelProps {
 }
 
 export default function InputExcel({ onImport }: InputExcelProps) {
-  const { addContacts } = useContact()
-
   const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -53,12 +51,13 @@ export default function InputExcel({ onImport }: InputExcelProps) {
 
         const importedContacts = (jsonData as ContactExcelRow[]).map((row) => ({
           name: row.name || row['Họ tên'] || '',
-          rank: row.rank || row['Cấp bậc'] || '',
-          position: row.position || row['Chức vụ'] || '',
-          department: row.department || row['Phòng/Ban'] || '',
-          location: row.location || row['Đơn vị'] || '',
+          rank_name: row.rank_name || row['Cấp bậc'] || '',
+          position_name: row.position_name || row['Chức vụ'] || '',
+          department_name: row.department_name || row['Phòng/Ban'] || '',
+          location_name: row.location_name || row['Đơn vị'] || '',
           manager: row.manager || row['Quản lý'] || '',
-          military_postal_code: row.military_postal_code || row['Mã BĐQS'] || '',
+          military_postal_code:
+            row.military_postal_code || row['Mã BĐQS'] || '',
           address: row.address || row['Địa chỉ'] || '',
           mobile_no: row.mobile_no || row['Số điện thoại'] || '',
         }))

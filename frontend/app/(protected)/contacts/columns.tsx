@@ -6,30 +6,47 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ColumnDef } from '@tanstack/react-table'
-import { MoreVerticalIcon, Check, X, MapPin } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { Check, X, MapPin, ArrowUpDown, MoreHorizontal } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { updateContact } from '@/api/contacts'
+import { updateContact, deleteContact } from '@/api/contacts'
 import { Contact } from '@/types/contact'
-import { usePermission } from '@/hooks/usePermission'
 import { AddressDialog } from '@/components/AddressDialog'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { useContact } from '@/contexts/ContactContext'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+} from '@/components/ui/tooltip'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 type EditableCellProps = {
   value: string
@@ -38,24 +55,48 @@ type EditableCellProps = {
   onSave: (id: number, field: string, value: string) => Promise<void>
   onUpdate: (updatedContact: Contact) => void
   isEnabled: boolean
+  options?: {
+    departments: Option[]
+    locations: Option[]
+    ranks: Option[]
+    positions: Option[]
+  }
 }
 
-const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: EditableCellProps) => {
+type Option = {
+  id: number
+  name: string
+}
+
+const EditableCell = ({
+  value,
+  row,
+  column,
+  onSave,
+  onUpdate,
+  isEnabled,
+  options,
+}: EditableCellProps) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value)
   const [isSaving, setIsSaving] = useState(false)
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false)
   const [open, setOpen] = useState(false)
-  const { departments, locations, ranks } = useContact()
 
-  const getOptions = () => {
+  // Debug log
+  // console.log('EditableCell options:', options)
+
+  const getOptions = (): Option[] => {
+    if (!options) return []
     switch (column.id) {
-      case 'department':
-        return departments
-      case 'location':
-        return locations
-      case 'rank':
-        return ranks
+      case 'department_name':
+        return options.departments
+      case 'location_name':
+        return options.locations
+      case 'rank_name':
+        return options.ranks
+      case 'position_name':
+        return options.positions
       default:
         return []
     }
@@ -164,7 +205,14 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
       )
     }
 
-    if (['department', 'location', 'rank'].includes(column.id)) {
+    if (
+      [
+        'department_name',
+        'location_name',
+        'rank_name',
+        'position_name',
+      ].includes(column.id)
+    ) {
       return (
         <div className="flex items-center gap-2">
           <Popover open={open} onOpenChange={setOpen}>
@@ -175,7 +223,7 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
                 aria-expanded={open}
                 className="w-[200px] justify-between"
               >
-                {editValue || "Chọn..."}
+                {editValue || 'Chọn...'}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -186,8 +234,8 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
                 <CommandGroup>
                   {getOptions().map((option) => (
                     <CommandItem
-                      key={option}
-                      value={option}
+                      key={option.id}
+                      value={option.name}
                       onSelect={(currentValue) => {
                         setEditValue(currentValue)
                         setOpen(false)
@@ -195,11 +243,13 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
                     >
                       <Check
                         className={cn(
-                          "mr-2 h-4 w-4",
-                          editValue === option ? "opacity-100" : "opacity-0"
+                          'mr-2 h-4 w-4',
+                          editValue === option.name
+                            ? 'opacity-100'
+                            : 'opacity-0'
                         )}
                       />
-                      {option}
+                      {option.name}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -277,9 +327,131 @@ const EditableCell = ({ value, row, column, onSave, onUpdate, isEnabled }: Edita
   )
 }
 
+const DeleteDialog = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  contactName,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  contactName: string
+}) => {
+  // Cleanup pointer-events khi dialog đóng hoặc component unmount
+  useEffect(() => {
+    if (!isOpen) {
+      document.body.style.pointerEvents = ''
+    }
+    return () => {
+      document.body.style.pointerEvents = ''
+    }
+  }, [isOpen])
+
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          document.body.style.pointerEvents = ''
+          onClose()
+        }
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác nhận xóa</DialogTitle>
+          <DialogDescription>
+            Bạn có chắc chắn muốn xóa liên hệ &ldquo;{contactName}&rdquo;? Hành
+            động này không thể hoàn tác.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Hủy
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Xóa
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+const ActionsCell = ({
+  row,
+  hasPermission,
+  onDelete,
+}: {
+  row: { original: Contact }
+  hasPermission: (permission: string) => boolean
+  onDelete: () => void
+}) => {
+  const contact = row.original
+  const canEdit = hasPermission('EDIT_CONTACTS')
+  const canDelete = hasPermission('DELETE_CONTACTS')
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
+  const handleDelete = async () => {
+    try {
+      await deleteContact(contact.id, 'Xóa bởi người dùng')
+      toast.success('Xóa liên hệ thành công!')
+      setIsDeleteDialogOpen(false)
+      onDelete() // Gọi hàm refresh sau khi xóa thành công
+    } catch (error) {
+      console.error('Lỗi khi xóa:', error)
+      toast.error('Có lỗi xảy ra khi xóa liên hệ')
+    }
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Mở menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Hành động</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {canEdit && (
+            <DropdownMenuItem asChild>
+              <Link href={`/contacts/edit/${contact.id}`}>Chỉnh sửa</Link>
+            </DropdownMenuItem>
+          )}
+          {canDelete && (
+            <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)}>
+              Xóa
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {isDeleteDialogOpen && (
+        <DeleteDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          onConfirm={handleDelete}
+          contactName={contact.manager || 'Không có tên'}
+        />
+      )}
+    </>
+  )
+}
+
 export const contactColumns = (
   onUpdateContact: (updatedContact: Contact) => void,
-  isInlineEditEnabled: boolean
+  isInlineEditEnabled: boolean,
+  hasPermission: (permission: string) => boolean,
+  options: {
+    departments: Option[]
+    locations: Option[]
+    ranks: Option[]
+    positions: Option[]
+  },
+  onDelete: () => void
 ): ColumnDef<Contact>[] => [
   {
     id: 'select',
@@ -312,44 +484,76 @@ export const contactColumns = (
     header: 'STT',
   },
   {
-    accessorKey: 'rank',
-    header: 'Cấp bậc',
+    accessorKey: 'rank_name',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Cấp bậc
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row, column }) => (
       <EditableCell
-        value={row.getValue(column.id)}
+        value={row.getValue('rank_name')}
         row={row}
         column={column}
         onSave={async (id, field, value) => {
           const contact = row.original
-          await updateContact(id, { ...contact, [field]: value })
-          toast.success('Cập nhật thành công!')
+          const selectedOption = options.ranks.find((r) => r.name === value)
+          if (selectedOption) {
+            await updateContact(id, { ...contact, rank_id: selectedOption.id })
+            toast.success('Cập nhật thành công!')
+          }
         }}
         onUpdate={onUpdateContact}
         isEnabled={isInlineEditEnabled}
+        options={options}
       />
     ),
   },
   {
-    accessorKey: 'position',
-    header: 'Chức vụ',
+    accessorKey: 'position_name',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Chức vụ
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row, column }) => (
       <EditableCell
-        value={row.getValue(column.id)}
+        value={row.getValue('position_name')}
         row={row}
         column={column}
         onSave={async (id, field, value) => {
           const contact = row.original
-          await updateContact(id, { ...contact, [field]: value })
-          toast.success('Cập nhật thành công!')
+          const selectedOption = options.positions.find((p) => p.name === value)
+          if (selectedOption) {
+            await updateContact(id, {
+              ...contact,
+              position_id: selectedOption.id,
+            })
+            toast.success('Cập nhật thành công!')
+          }
         }}
         onUpdate={onUpdateContact}
         isEnabled={isInlineEditEnabled}
+        options={options}
       />
     ),
   },
+
   {
     accessorKey: 'manager',
-    header: 'Cán bộ quản lý',
+    header: 'Quản lý',
     cell: ({ row, column }) => (
       <EditableCell
         value={row.getValue(column.id)}
@@ -366,38 +570,54 @@ export const contactColumns = (
     ),
   },
   {
-    accessorKey: 'department',
+    accessorKey: 'department_name',
     header: 'Phòng/Ban',
     cell: ({ row, column }) => (
       <EditableCell
-        value={row.getValue(column.id)}
+        value={row.getValue('department_name')}
         row={row}
         column={column}
         onSave={async (id, field, value) => {
           const contact = row.original
-          await updateContact(id, { ...contact, [field]: value })
-          toast.success('Cập nhật thành công!')
+          const selectedOption = options.departments.find(
+            (d) => d.name === value
+          )
+          if (selectedOption) {
+            await updateContact(id, {
+              ...contact,
+              department_id: selectedOption.id,
+            })
+            toast.success('Cập nhật thành công!')
+          }
         }}
         onUpdate={onUpdateContact}
         isEnabled={isInlineEditEnabled}
+        options={options}
       />
     ),
   },
   {
-    accessorKey: 'location',
+    accessorKey: 'location_name',
     header: 'Đơn vị',
     cell: ({ row, column }) => (
       <EditableCell
-        value={row.getValue(column.id)}
+        value={row.getValue('location_name')}
         row={row}
         column={column}
-        onSave={async (id, field, value) => {
+        onSave={async (id, value) => {
           const contact = row.original
-          await updateContact(id, { ...contact, [field]: value })
-          toast.success('Cập nhật thành công!')
+          const selectedOption = options.locations.find((l) => l.name === value)
+          if (selectedOption) {
+            await updateContact(id, {
+              ...contact,
+              location_id: selectedOption.id,
+            })
+            toast.success('Cập nhật thành công!')
+          }
         }}
         onUpdate={onUpdateContact}
         isEnabled={isInlineEditEnabled}
+        options={options}
       />
     ),
   },
@@ -423,7 +643,7 @@ export const contactColumns = (
   },
   {
     accessorKey: 'military_postal_code',
-    header: 'Quân sự/Bưu điện',
+    header: 'Mã BĐQS',
     cell: ({ row, column }) => (
       <EditableCell
         value={row.getValue(column.id)}
@@ -441,7 +661,7 @@ export const contactColumns = (
   },
   {
     accessorKey: 'mobile_no',
-    header: 'Di động',
+    header: 'Số điện thoại',
     cell: ({ row, column }) => (
       <EditableCell
         value={row.getValue(column.id)}
@@ -460,39 +680,12 @@ export const contactColumns = (
   {
     id: 'actions',
     header: 'Hành động',
-    cell: ({ row }) => {
-      const router = useRouter()
-      const contact = row.original
-      const { hasPermission } = usePermission()
-      const canEdit = hasPermission('EDIT_CONTACTS')
-      const canDelete = hasPermission('DELETE_CONTACTS')
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-              size="icon"
-            >
-              <MoreVerticalIcon />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32">
-            {canEdit && (
-            <DropdownMenuItem onClick={() => router.push(`/contacts/edit/${contact.id}`)}>
-              Chỉnh sửa
-            </DropdownMenuItem>
-            )}
-            <DropdownMenuItem>Nhân bản</DropdownMenuItem>
-            <DropdownMenuItem>Yêu thích</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {canDelete && (
-            <DropdownMenuItem>Xóa</DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
+    cell: ({ row }) => (
+      <ActionsCell
+        row={row}
+        hasPermission={hasPermission}
+        onDelete={onDelete}
+      />
+    ),
   },
 ]

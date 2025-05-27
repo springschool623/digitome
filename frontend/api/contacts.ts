@@ -58,10 +58,7 @@ export const createContact = async (contact: Omit<Contact, 'id'>) => {
 }
 
 // Cập nhật liên hệ
-export const updateContact = async (
-  id: number,
-  contact: Contact
-) => {
+export const updateContact = async (id: number, contact: Contact) => {
   try {
     const res = await fetch(`http://localhost:5000/api/contacts/${id}`, {
       method: 'PUT',
@@ -90,11 +87,16 @@ export const updateContact = async (
 }
 
 // Xóa liên hệ
-export const deleteContact = async (id: number) => {
+export const deleteContact = async (id: number, reason: string) => {
   try {
     const res = await fetch(`http://localhost:5000/api/contacts/${id}`, {
       method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      // credentials: 'include',
+      body: JSON.stringify({ reason }),
     })
+
+    console.log(res)
 
     if (!res.ok) {
       toast.error('Xóa liên hệ thất bại!', {
