@@ -1,7 +1,7 @@
 // Lấy thông tin chức vụ
 export const getPositions = async () => {
   try {
-    const res = await fetch(`http://localhost:5000/api/positions`)
+    const res = await fetch(`${dbDomain}/api/positions`)
     if (!res.ok) throw new Error('Failed to fetch positions')
     return await res.json()
   } catch (error) {
@@ -9,3 +9,5 @@ export const getPositions = async () => {
     throw error
   }
 }
+
+const dbDomain = 'https://digitome-backend.onrender.com/'

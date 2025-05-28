@@ -3,10 +3,12 @@
 import { Contact, ContactImport } from '@/types/contact'
 import { toast } from 'sonner'
 
+const dbDomain = 'https://digitome-backend.onrender.com/'
+
 // Lấy danh sách liên hệ
 export const getContacts = async () => {
   try {
-    const res = await fetch('http://localhost:5000/api/contacts')
+    const res = await fetch(`${dbDomain}/api/contacts`)
     if (!res.ok) throw new Error('Failed to fetch contacts')
     return await res.json()
   } catch (error) {
@@ -18,7 +20,7 @@ export const getContacts = async () => {
 // Lấy thông tin liên hệ cụ thể bằng id
 export const getContact = async (id: number) => {
   try {
-    const res = await fetch(`http://localhost:5000/api/contacts/${id}`)
+    const res = await fetch(`${dbDomain}/api/contacts/${id}`)
     if (!res.ok) throw new Error('Failed to fetch contact')
     return await res.json()
   } catch (error) {
@@ -30,7 +32,7 @@ export const getContact = async (id: number) => {
 // Tạo liên hệ mới
 export const createContact = async (contact: Omit<Contact, 'id'>) => {
   try {
-    const res = await fetch('http://localhost:5000/api/contacts', {
+    const res = await fetch(`${dbDomain}/api/contacts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -60,7 +62,7 @@ export const createContact = async (contact: Omit<Contact, 'id'>) => {
 // Cập nhật liên hệ
 export const updateContact = async (id: number, contact: Contact) => {
   try {
-    const res = await fetch(`http://localhost:5000/api/contacts/${id}`, {
+    const res = await fetch(`${dbDomain}/api/contacts/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -89,7 +91,7 @@ export const updateContact = async (id: number, contact: Contact) => {
 // Xóa liên hệ
 export const deleteContact = async (id: number, reason: string) => {
   try {
-    const res = await fetch(`http://localhost:5000/api/contacts/${id}`, {
+    const res = await fetch(`${dbDomain}/api/contacts/${id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       // credentials: 'include',
@@ -118,7 +120,7 @@ export const deleteContact = async (id: number, reason: string) => {
 // Import nhiều liên hệ từ file Excel
 export const addContacts = async (contacts: ContactImport[]) => {
   try {
-    const res = await fetch('http://localhost:5000/api/contacts/import', {
+    const res = await fetch(`${dbDomain}/api/contacts/import`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contacts }),
@@ -128,7 +130,7 @@ export const addContacts = async (contacts: ContactImport[]) => {
 
     if (res.status === 201) {
       toast.success(`Nhập ${data.data.length} liên hệ thành công!`, {
-        style: { background: "#28a745", color: '#fff' },
+        style: { background: '#28a745', color: '#fff' },
         duration: 3000,
       })
     } else if (res.status === 207) {
@@ -155,4 +157,3 @@ export const addContacts = async (contacts: ContactImport[]) => {
     throw error
   }
 }
-

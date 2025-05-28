@@ -2,6 +2,8 @@
 
 import { toast } from 'sonner'
 
+const dbDomain = 'https://digitome-backend.onrender.com/'
+
 export interface LoginResponse {
   user: {
     id: number
@@ -16,7 +18,7 @@ export const login = async (
   password: string
 ): Promise<LoginResponse> => {
   try {
-    const response = await fetch('http://localhost:5000/api/accounts/login', {
+    const response = await fetch(`${dbDomain}/api/accounts/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mobile_no, password }),

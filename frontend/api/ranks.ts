@@ -1,7 +1,7 @@
 // Lấy thông tin cấp bậc
 export const getRanks = async () => {
   try {
-    const res = await fetch(`http://localhost:5000/api/ranks`)
+    const res = await fetch(`${dbDomain}/api/ranks`)
     if (!res.ok) throw new Error('Failed to fetch contact')
     return await res.json()
   } catch (error) {
@@ -9,3 +9,5 @@ export const getRanks = async () => {
     throw error
   }
 }
+
+const dbDomain = 'https://digitome-backend.onrender.com/'

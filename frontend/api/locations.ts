@@ -1,7 +1,7 @@
 // Lấy thông tin đơn vị
 export const getLocations = async () => {
   try {
-    const res = await fetch(`http://localhost:5000/api/locations`)
+    const res = await fetch(`${dbDomain}/api/locations`)
     if (!res.ok) throw new Error('Failed to fetch locations')
     return await res.json()
   } catch (error) {
@@ -9,3 +9,5 @@ export const getLocations = async () => {
     throw error
   }
 }
+
+const dbDomain = 'https://digitome-backend.onrender.com/'

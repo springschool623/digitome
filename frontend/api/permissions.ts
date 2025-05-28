@@ -1,15 +1,17 @@
 import { Permission } from '@/types/permission'
 import { toast } from 'sonner'
 
+const dbDomain = 'https://digitome-backend.onrender.com/'
+
 const getTokenFromCookie = (): string | null => {
-    const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/)
-    return match ? match[1] : null
-  }
+  const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/)
+  return match ? match[1] : null
+}
 
 export const getPermissions = async (): Promise<Permission[]> => {
   const token = getTokenFromCookie()
   try {
-    const res = await fetch('http://localhost:5000/api/permissions', {
+    const res = await fetch(`${dbDomain}/api/permissions`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -39,4 +41,4 @@ export const getPermissions = async (): Promise<Permission[]> => {
     console.error('Lỗi khi lấy danh sách quyền:', error)
     throw error
   }
-} 
+}

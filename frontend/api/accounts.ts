@@ -7,10 +7,13 @@ const getTokenFromCookie = (): string | null => {
   return match ? match[1] : null
 }
 
+// const dbDomain = 'http://localhost:5000'
+const dbDomain = 'https://digitome-backend.onrender.com/'
+
 export const getAccounts = async () => {
   const token = getTokenFromCookie()
   try {
-    const res = await fetch('http://localhost:5000/api/accounts', {
+    const res = await fetch(`${dbDomain}/api/accounts`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -81,7 +84,7 @@ export const deleteAccount = async (id: number) => {
   const token = getTokenFromCookie()
 
   try {
-    const res = await fetch(`http://localhost:5000/api/accounts/${id}`, {
+    const res = await fetch(`${dbDomain}/api/accounts/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
