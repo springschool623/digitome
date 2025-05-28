@@ -1,9 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { provinces, districts, wards } from 'vietnam-provinces'
 
@@ -14,21 +25,23 @@ interface AddressDialogProps {
   initialAddress?: string
 }
 
-export function AddressDialog({ isOpen, onClose, onSave, initialAddress = '' }: AddressDialogProps) {
+export function AddressDialog({ isOpen, onClose, onSave }: AddressDialogProps) {
   const [selectedProvince, setSelectedProvince] = useState('')
   const [selectedDistrict, setSelectedDistrict] = useState('')
   const [selectedWard, setSelectedWard] = useState('')
   const [street, setStreet] = useState('')
 
   const handleSave = () => {
-    const province = provinces.find(p => p.code === selectedProvince)?.name || ''
-    const district = districts.find(d => d.code === selectedDistrict)?.name || ''
-    const ward = wards.find(w => w.code === selectedWard)?.name || ''
-    
+    const province =
+      provinces.find((p) => p.code === selectedProvince)?.name || ''
+    const district =
+      districts.find((d) => d.code === selectedDistrict)?.name || ''
+    const ward = wards.find((w) => w.code === selectedWard)?.name || ''
+
     const fullAddress = [street, ward, district, province]
       .filter(Boolean)
       .join(', ')
-    
+
     onSave(fullAddress)
     onClose()
   }
@@ -42,7 +55,10 @@ export function AddressDialog({ isOpen, onClose, onSave, initialAddress = '' }: 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <label>Tỉnh/Thành phố</label>
-            <Select value={selectedProvince} onValueChange={setSelectedProvince}>
+            <Select
+              value={selectedProvince}
+              onValueChange={setSelectedProvince}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Chọn tỉnh/thành phố" />
               </SelectTrigger>
@@ -58,8 +74,8 @@ export function AddressDialog({ isOpen, onClose, onSave, initialAddress = '' }: 
 
           <div className="grid gap-2">
             <label>Quận/Huyện</label>
-            <Select 
-              value={selectedDistrict} 
+            <Select
+              value={selectedDistrict}
               onValueChange={setSelectedDistrict}
               disabled={!selectedProvince}
             >
@@ -68,7 +84,9 @@ export function AddressDialog({ isOpen, onClose, onSave, initialAddress = '' }: 
               </SelectTrigger>
               <SelectContent>
                 {districts
-                  .filter(district => district.province_code === selectedProvince)
+                  .filter(
+                    (district) => district.province_code === selectedProvince
+                  )
                   .map((district) => (
                     <SelectItem key={district.code} value={district.code}>
                       {district.name}
@@ -80,8 +98,8 @@ export function AddressDialog({ isOpen, onClose, onSave, initialAddress = '' }: 
 
           <div className="grid gap-2">
             <label>Phường/Xã</label>
-            <Select 
-              value={selectedWard} 
+            <Select
+              value={selectedWard}
               onValueChange={setSelectedWard}
               disabled={!selectedDistrict}
             >
@@ -90,7 +108,7 @@ export function AddressDialog({ isOpen, onClose, onSave, initialAddress = '' }: 
               </SelectTrigger>
               <SelectContent>
                 {wards
-                  .filter(ward => ward.district_code === selectedDistrict)
+                  .filter((ward) => ward.district_code === selectedDistrict)
                   .map((ward) => (
                     <SelectItem key={ward.code} value={ward.code}>
                       {ward.name}
@@ -113,11 +131,9 @@ export function AddressDialog({ isOpen, onClose, onSave, initialAddress = '' }: 
           <Button variant="outline" onClick={onClose}>
             Hủy
           </Button>
-          <Button onClick={handleSave}>
-            Lưu
-          </Button>
+          <Button onClick={handleSave}>Lưu</Button>
         </div>
       </DialogContent>
     </Dialog>
   )
-} 
+}
