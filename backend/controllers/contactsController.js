@@ -212,3 +212,180 @@ export const deleteContact = async (req, res) => {
       .json({ message: 'Internal server error', error: error.message })
   }
 }
+
+export const importContacts = async (req, res) => {
+  const { contacts } = req.body;
+
+  if (!Array.isArray(contacts) || contacts.length === 0) {
+    return res.status(400).json({ 
+      success: false,
+      message: 'Không có liên hệ để import!' 
+    });
+  }
+
+  try {
+    await pool.query('BEGIN');
+
+    const importedContacts = [];
+    const failedContacts = [];
+
+    // 🔍 Bước 1: Kiểm tra trùng trong danh sách import
+    const mobileNoCount = contacts.reduce((acc, contact) => {
+      acc[contact.mobile_no] = (acc[contact.mobile_no] || 0) + 1;
+      return acc;
+    }, {});
+
+    for (const contact of contacts) {
+      // Nếu bị trùng trong danh sách thì bỏ qua
+      if (mobileNoCount[contact.mobile_no] > 1) {
+        failedContacts.push({
+          contact,
+          error: `Số điện thoại "${contact.mobile_no}" bị trùng trong danh sách import.`,
+        });
+        continue;
+      }
+
+      try {
+        // 🔍 Bước 2: Kiểm tra trùng trong CSDL
+        const exists = await pool.query(
+          'SELECT id FROM contacts WHERE mobile_no = $1',
+          [contact.mobile_no]
+        );
+        if (exists.rows.length > 0) {
+          failedContacts.push({
+            contact,
+            error: `Số điện thoại "${contact.mobile_no}" đã tồn tại trong hệ thống.`,
+          });
+          continue;
+        }
+
+        // ✅ Bước 3: Get/Create rank, position, department, location như cũ...
+        // Get or create rank
+        let rankId = null;
+        if (contact.rank_name) {
+          // Try insert, if already exists, select id
+          const rankInsert = await pool.query(
+            'INSERT INTO ranks (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id',
+            [contact.rank_name]
+          );
+          // console.log(contact.rank_name);
+          if (rankInsert.rows.length > 0) {
+            rankId = rankInsert.rows[0].id;
+          } else {
+            const rankResult = await pool.query(
+              'SELECT id FROM ranks WHERE name = $1',
+              [contact.rank_name]
+            );
+            if (rankResult.rows.length > 0) rankId = rankResult.rows[0].id;
+          }
+        }
+
+        // Get or create position
+        let positionId = null;
+        if (contact.position_name) {
+          const positionInsert = await pool.query(
+            'INSERT INTO positions (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id',
+            [contact.position_name]
+          );
+          if (positionInsert.rows.length > 0) {
+            positionId = positionInsert.rows[0].id;
+          } else {
+            const positionResult = await pool.query(
+              'SELECT id FROM positions WHERE name = $1',
+              [contact.position_name]
+            );
+            if (positionResult.rows.length > 0) positionId = positionResult.rows[0].id;
+          }
+        }
+
+        // Get or create department
+        let departmentId = null;
+        if (contact.department_name) {
+          const departmentInsert = await pool.query(
+            'INSERT INTO departments (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id',
+            [contact.department_name]
+          );
+          if (departmentInsert.rows.length > 0) {
+            departmentId = departmentInsert.rows[0].id;
+          } else {
+            const departmentResult = await pool.query(
+              'SELECT id FROM departments WHERE name = $1',
+              [contact.department_name]
+            );
+            if (departmentResult.rows.length > 0) departmentId = departmentResult.rows[0].id;
+          }
+        }
+
+        // Get or create location
+        let locationId = null;
+        if (contact.location_name) {
+          const locationInsert = await pool.query(
+            'INSERT INTO locations (name) VALUES ($1) ON CONFLICT (name) DO NOTHING RETURNING id',
+            [contact.location_name]
+          );
+          if (locationInsert.rows.length > 0) {
+            locationId = locationInsert.rows[0].id;
+          } else {
+            const locationResult = await pool.query(
+              'SELECT id FROM locations WHERE name = $1',
+              [contact.location_name]
+            );
+            if (locationResult.rows.length > 0) locationId = locationResult.rows[0].id;
+          }
+        }
+
+        // Ví dụ phần insert:
+        const result = await pool.query(
+          `INSERT INTO contacts (
+            rank_id, position_id, manager, department_id, 
+            location_id, address, military_postal_code, mobile_no
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+          RETURNING *`,
+          [
+            rankId,
+            positionId,
+            contact.manager,
+            departmentId,
+            locationId,
+            contact.address,
+            contact.military_postal_code,
+            contact.mobile_no,
+          ]
+        );
+
+        importedContacts.push(result.rows[0]);
+      } catch (error) {
+        failedContacts.push({
+          contact,
+          error: error.message,
+        });
+      }
+    }
+
+    if (failedContacts.length > 0) {
+      await pool.query('ROLLBACK');
+      return res.status(207).json({
+        success: false,
+        message: 'Một số liên hệ không thể import',
+        imported: importedContacts,
+        failed: failedContacts,
+      });
+    }
+
+    await pool.query('COMMIT');
+    return res.status(201).json({
+      success: true,
+      message: `Successfully imported ${importedContacts.length} contacts`,
+      data: importedContacts,
+    });
+
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('Error importing contacts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};

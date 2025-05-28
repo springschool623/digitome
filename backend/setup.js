@@ -2,6 +2,7 @@ import { createDatabase, closePool } from './sql/database.js'
 import { createSchema } from './sql/schema.js'
 import { runSeeds } from './sql/seed.js'
 import { startServer } from './server.js'
+import resetSequences from './sql/resetSequences.js'
 
 async function setup() {
   try {
@@ -18,6 +19,9 @@ async function setup() {
     // Run seeds
     console.log('Running seeds...')
     await runSeeds()
+
+    console.log('Resetting sequences...')
+    await resetSequences()
 
     // Close the postgres pool
     await closePool()

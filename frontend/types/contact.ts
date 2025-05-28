@@ -9,3 +9,14 @@ export type Contact = {
   military_postal_code: string
   mobile_no: string
 }
+
+export type ContactImport = {
+  rank_name: string
+  position_name: string
+  manager: string
+  department_name: string
+  location_name: string
+  address: string
+  military_postal_code: string
+  mobile_no: string
+}

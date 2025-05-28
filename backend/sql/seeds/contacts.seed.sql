@@ -1,3 +1,5 @@
+TRUNCATE TABLE contacts RESTART IDENTITY CASCADE;
+
 INSERT INTO Contacts (
   rank_id, position_id, manager, department_id, location_id,
   address, military_postal_code, mobile_no

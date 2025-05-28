@@ -1,3 +1,4 @@
+TRUNCATE TABLE permissions RESTART IDENTITY CASCADE;
 INSERT INTO Permissions (id, permission_code, permission_name, permission_category)
 VALUES
 (1, 'VIEW_CONTACTS', 'Xem thông tin liên lạc', 'Dữ liệu'),

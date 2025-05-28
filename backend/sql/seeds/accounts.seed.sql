@@ -1,3 +1,5 @@
+TRUNCATE TABLE accounts RESTART IDENTITY CASCADE;
+
 INSERT INTO Accounts (id, mobile_no, password, created_by, status, role_id)
 VALUES
 (1, '0901000010', 'admin12345', NULL, 'active', 1);

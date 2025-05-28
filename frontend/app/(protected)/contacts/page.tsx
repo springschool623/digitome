@@ -1,77 +1,77 @@
-'use client'
+"use client";
 
-import { useEffect, useMemo, useState } from 'react'
-import { DataTable } from './data-table'
-import { Button } from '@/components/ui/button'
-import { RefreshCcw, Edit2, Check } from 'lucide-react'
-import Header from '@/components/PageHeader'
-import FilterDialog from '@/components/FilterDialog'
-import FilterRow from '@/components/FilterRow'
-import { Input } from '@/components/ui/input'
-import InputExcel from '@/components/InputExcel'
-import { getContacts } from '@/api/contacts'
-import { contactColumns } from './columns'
-import { Contact } from '@/types/contact'
-import { usePermission } from '@/hooks/usePermission'
-import { ContactProvider, useContact } from '@/contexts/ContactContext'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from "react";
+import { DataTable } from "./data-table";
+import { Button } from "@/components/ui/button";
+import { RefreshCcw, Edit2, Check } from "lucide-react";
+import Header from "@/components/PageHeader";
+import FilterDialog from "@/components/FilterDialog";
+import FilterRow from "@/components/FilterRow";
+import { Input } from "@/components/ui/input";
+import InputExcel from "@/components/InputExcel";
+import { getContacts } from "@/api/contacts";
+import { contactColumns } from "./columns";
+import { Contact, ContactImport } from "@/types/contact";
+import { usePermission } from "@/hooks/usePermission";
+import { ContactProvider, useContact } from "@/contexts/ContactContext";
+import { useRouter } from "next/navigation";
 
 const breadcrumbs = [
-  { label: 'Dashboard', href: 'dashboard' },
-  { label: 'Danh bạ điện thoại', href: 'contacts' },
-  { label: 'Danh sách liên hệ' },
-]
+  { label: "Dashboard", href: "dashboard" },
+  { label: "Danh bạ điện thoại", href: "contacts" },
+  { label: "Danh sách liên hệ" },
+];
 
 const filterFields = [
-  'rank_id',
-  'position_id',
-  'department_id',
-  'location_id',
-] as const
+  "rank_id",
+  "position_id",
+  "department_id",
+  "location_id",
+] as const;
 
 const initialFilters = {
   rank_id: 0,
   position_id: 0,
   department_id: 0,
   location_id: 0,
-}
+};
 
 function ContactsContent() {
-  const [search, setSearch] = useState('')
-  const [filters, setFilters] = useState(initialFilters)
-  const [contacts, setContacts] = useState<Contact[]>([])
-  const [isInlineEditEnabled, setIsInlineEditEnabled] = useState(false)
-  const { hasPermission } = usePermission()
-  const router = useRouter()
-  const { ranks, positions, departments, locations } = useContact()
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState(initialFilters);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isInlineEditEnabled, setIsInlineEditEnabled] = useState(false);
+  const { hasPermission } = usePermission();
+  const router = useRouter();
+  const { ranks, positions, departments, locations } = useContact();
 
   const fetchContacts = async () => {
     try {
-      const data = await getContacts()
-      setContacts(data)
+      const data = await getContacts();
+      setContacts(data);
     } catch (error) {
-      console.error('Lỗi khi lấy danh bạ:', error)
+      console.error("Lỗi khi lấy danh bạ:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchContacts()
-  }, [])
+    fetchContacts();
+  }, []);
 
   const updateState =
     <T extends object>(setter: React.Dispatch<React.SetStateAction<T>>) =>
     (field: keyof T, value: string | number) =>
-      setter((prev) => ({ ...prev, [field]: value }))
+      setter((prev) => ({ ...prev, [field]: value }));
 
-  const handleFilterChange = updateState(setFilters)
+  const handleFilterChange = updateState(setFilters);
 
   const handleUpdateContact = (updatedContact: Contact) => {
     setContacts((prev) =>
       prev.map((contact) =>
         contact.id === updatedContact.id ? updatedContact : contact
       )
-    )
-  }
+    );
+  };
 
   const getFilteredContacts = useMemo(() => {
     return contacts
@@ -95,15 +95,15 @@ function ContactsContent() {
         filterFields.every(
           (field) => !filters[field] || filters[field] === c[field]
         )
-      )
-  }, [contacts, filters, search])
+      );
+  }, [contacts, filters, search]);
 
   const validOptions = useMemo(() => {
     const filtered = contacts.filter((c) =>
       filterFields.every(
         (field) => !filters[field] || filters[field] === c[field]
       )
-    )
+    );
 
     return {
       rank_id: ranks
@@ -118,50 +118,50 @@ function ContactsContent() {
       location_id: locations
         .filter((l) => filtered.some((c) => c.location_id === l.id))
         .map((l) => l.name),
-    }
-  }, [contacts, filters, ranks, positions, departments, locations])
+    };
+  }, [contacts, filters, ranks, positions, departments, locations]);
 
   const filterRows = filterFields.map((field) => {
     const list =
-      field === 'rank_id'
+      field === "rank_id"
         ? ranks
-        : field === 'position_id'
+        : field === "position_id"
         ? positions
-        : field === 'department_id'
+        : field === "department_id"
         ? departments
-        : locations
+        : locations;
 
     return {
       label:
-        field === 'rank_id'
-          ? 'Cấp bậc:'
-          : field === 'position_id'
-          ? 'Chức vụ:'
-          : field === 'department_id'
-          ? 'Phòng/Ban:'
-          : 'Đơn vị:',
-      value: list.find((item) => item.id === filters[field])?.name || '',
+        field === "rank_id"
+          ? "Cấp bậc:"
+          : field === "position_id"
+          ? "Chức vụ:"
+          : field === "department_id"
+          ? "Phòng/Ban:"
+          : "Đơn vị:",
+      value: list.find((item) => item.id === filters[field])?.name || "",
       onChange: (val: string) => {
-        const id = list.find((item) => item.name === val)?.id || 0
-        handleFilterChange(field, id)
+        const id = list.find((item) => item.name === val)?.id || 0;
+        handleFilterChange(field, id);
       },
       placeholder: `Lọc theo ${
-        field === 'rank_id'
-          ? 'cấp bậc'
-          : field === 'position_id'
-          ? 'chức vụ'
-          : field === 'department_id'
-          ? 'phòng/ban'
-          : 'đơn vị'
+        field === "rank_id"
+          ? "cấp bậc"
+          : field === "position_id"
+          ? "chức vụ"
+          : field === "department_id"
+          ? "phòng/ban"
+          : "đơn vị"
       }`,
       options: validOptions[field], // đây vẫn là string[]
-    }
-  })
+    };
+  });
 
   const resetFilters = () => {
-    setSearch('')
-    setFilters(initialFilters)
-  }
+    setSearch("");
+    setFilters(initialFilters);
+  };
 
   const columns = useMemo(
     () =>
@@ -185,7 +185,65 @@ function ContactsContent() {
       departments,
       locations,
     ]
-  )
+  );
+
+  const handleImportContacts = async (importedContacts: ContactImport[]) => {
+    console.group("Contact Import Process");
+    try {
+      console.log("Starting import process...");
+      console.log("Number of contacts to import:", importedContacts.length);
+      console.log("Sample contact data:", importedContacts[0]);
+
+      // Log validation results
+      const invalidContacts = importedContacts.filter(
+        (contact) => !contact.manager
+      );
+      if (invalidContacts.length > 0) {
+        console.warn("Found contacts without names:", invalidContacts);
+      }
+
+      // Log unique values for reference data
+      const uniqueRanks = new Set(
+        importedContacts.map((c) => c.rank_name).filter(Boolean)
+      );
+      const uniquePositions = new Set(
+        importedContacts.map((c) => c.position_name).filter(Boolean)
+      );
+      const uniqueDepartments = new Set(
+        importedContacts.map((c) => c.department_name).filter(Boolean)
+      );
+      const uniqueLocations = new Set(
+        importedContacts.map((c) => c.location_name).filter(Boolean)
+      );
+
+      console.log("Unique reference data found in import:");
+      console.log("- Ranks:", Array.from(uniqueRanks));
+      console.log("- Positions:", Array.from(uniquePositions));
+      console.log("- Departments:", Array.from(uniqueDepartments));
+      console.log("- Locations:", Array.from(uniqueLocations));
+
+      // Refresh contacts list
+      console.log("Refreshing contacts list...");
+      const startTime = performance.now();
+      await fetchContacts();
+      const endTime = performance.now();
+      console.log(
+        `Contacts list refreshed in ${(endTime - startTime).toFixed(2)}ms`
+      );
+
+      console.log("Import process completed successfully");
+    } catch (error) {
+      console.error("Error during import process:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+    } finally {
+      console.groupEnd();
+    }
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -209,14 +267,14 @@ function ContactsContent() {
               <FilterRow key={props.label} {...props} />
             ))}
           </FilterDialog>
-          {hasPermission('EDIT_CONTACTS') && (
+          {hasPermission("EDIT_CONTACTS") && (
             <Button
-              variant={isInlineEditEnabled ? 'default' : 'outline'}
+              variant={isInlineEditEnabled ? "default" : "outline"}
               onClick={() => setIsInlineEditEnabled(!isInlineEditEnabled)}
               className={
                 isInlineEditEnabled
-                  ? 'bg-green-700 text-white hover:bg-green-800'
-                  : ''
+                  ? "bg-green-700 text-white hover:bg-green-800"
+                  : ""
               }
             >
               {isInlineEditEnabled ? (
@@ -235,55 +293,28 @@ function ContactsContent() {
         </div>
 
         <div className="flex items-center gap-4">
-          {hasPermission('EDIT_CONTACTS') && (
+          {hasPermission("EDIT_CONTACTS") && (
             <Button
               className="bg-green-500 text-white hover:bg-green-600"
-              onClick={() => router.push('/contacts/create')}
+              onClick={() => router.push("/contacts/create")}
             >
               Thêm mới
             </Button>
           )}
-          {hasPermission('IMPORT_CONTACTS') && (
-            <InputExcel
-              onImport={(rows) => {
-                setContacts((prev) => {
-                  const maxId = prev.reduce(
-                    (max, contact) => Math.max(max, contact.id),
-                    0
-                  )
-                  const mapped: Contact[] = rows.map((row, i) => ({
-                    id: maxId + i + 1,
-                    rank_id: 0,
-                    position_id: 0,
-                    department_id: 0,
-                    location_id: 0,
-                    rank_name: row.rank_name || row['Cấp bậc'] || '',
-                    position_name: row.position_name || row['Chức vụ'] || '',
-                    department_name:
-                      row.department_name || row['Phòng/Ban'] || '',
-                    location_name: row.location_name || row['Đơn vị'] || '',
-                    manager: row.manager || row['Quản lý'] || '',
-                    address: row.address || row['Địa chỉ'] || '',
-                    military_postal_code:
-                      row.military_postal_code || row['Mã BĐQS'] || '',
-                    mobile_no: row.mobile_no || row['Số điện thoại'] || '',
-                  }))
-                  return [...prev, ...mapped]
-                })
-              }}
-            />
+          {hasPermission("IMPORT_CONTACTS") && (
+            <InputExcel onImport={handleImportContacts} />
           )}
         </div>
       </div>
 
       <DataTable columns={columns} data={getFilteredContacts} />
     </div>
-  )
+  );
 }
 export default function ContactsPage() {
   return (
     <ContactProvider>
       <ContactsContent />
     </ContactProvider>
-  )
+  );
 }

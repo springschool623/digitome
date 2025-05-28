@@ -1,115 +1,150 @@
-'use client'
+"use client";
 
-import { Button } from '@/components/ui/button'
-import * as XLSX from 'xlsx'
-import { ContactExcelRow } from '@/lib/ContactExcelRow'
-import React from 'react'
-import { toast } from 'sonner' // hoặc react-toastify tùy bạn
-import { useContact } from '@/contexts/ContactContext'
+import { Button } from "@/components/ui/button";
+import * as XLSX from "xlsx";
+import { ContactExcelRow } from "@/lib/ContactExcelRow";
+import React from "react";
+import { toast } from "sonner";
+import { addContacts } from "@/api/contacts";
+import { ContactImport } from "@/types/contact";
 
 interface InputExcelProps {
-  onImport: (data: ContactExcelRow[]) => void
+  onImport: (data: ContactImport[]) => void;
 }
 
 export default function InputExcel({ onImport }: InputExcelProps) {
-  const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
-    const reader = new FileReader()
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    reader.onload = (event) => {
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
       try {
-        const data = new Uint8Array(event.target?.result as ArrayBuffer)
-        const workbook = XLSX.read(data, { type: 'array' })
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
 
         if (!workbook.SheetNames.length) {
-          toast.error('Không tìm thấy sheet trong file Excel.', {
+          toast.error("Không tìm thấy sheet trong file Excel.", {
             style: {
-              background: 'red', // Màu đỏ
-              color: '#fff', // Chữ trắng
+              background: "red",
+              color: "#fff",
             },
-            duration: 3000, // Toast sẽ hiển thị trong 3 giây
-          })
-          return
+            duration: 3000,
+          });
+          return;
         }
 
-        const sheetName = workbook.SheetNames[0]
-        const worksheet = workbook.Sheets[sheetName]
-        const jsonData = XLSX.utils.sheet_to_json(worksheet)
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
         if (!jsonData.length) {
-          toast.error('Không có dữ liệu nào trong file Excel.', {
+          toast.error("Không có dữ liệu nào trong file Excel.", {
             style: {
-              background: 'red', // Màu đỏ
-              color: '#fff', // Chữ trắng
+              background: "red",
+              color: "#fff",
             },
-            duration: 3000, // Toast sẽ hiển thị trong 3 giây
-          })
-          return
+            duration: 3000,
+          });
+          return;
         }
 
-        const importedContacts = (jsonData as ContactExcelRow[]).map((row) => ({
-          name: row.name || row['Họ tên'] || '',
-          rank_name: row.rank_name || row['Cấp bậc'] || '',
-          position_name: row.position_name || row['Chức vụ'] || '',
-          department_name: row.department_name || row['Phòng/Ban'] || '',
-          location_name: row.location_name || row['Đơn vị'] || '',
-          manager: row.manager || row['Quản lý'] || '',
+        console.log(jsonData);
+
+        const importedContacts: ContactImport[] = (
+          jsonData as ContactExcelRow[]
+        ).map((row) => ({
+          rank_name: row.rank_name || row["Cấp bậc"] || "",
+          position_name: row.position_name || row["Chức vụ"] || "",
+          manager: row.manager || row["Họ tên"] || "",
+          department_name: row.department_name || row["Phòng/Ban"] || "",
+          location_name: row.location_name || row["Đơn vị"] || "",
+          address: row.address || row["Địa chỉ"] || "",
           military_postal_code:
-            row.military_postal_code || row['Mã BĐQS'] || '',
-          address: row.address || row['Địa chỉ'] || '',
-          mobile_no: row.mobile_no || row['Số điện thoại'] || '',
-        }))
+            row.military_postal_code || row["Mã BĐQS"] || "",
+          mobile_no: row.mobile_no || row["Số điện thoại"] || "",
+        }));
 
-        if (importedContacts.every((c) => !c.name)) {
-          toast.error('Không có liên hệ nào hợp lệ (thiếu Họ tên).', {
+        // for (const contact of importedContacts) {
+        //   console.log(contact);
+        //   return;
+        // }
+
+        if (importedContacts.every((c) => !c.manager)) {
+          toast.error("Không có liên hệ nào hợp lệ (thiếu Họ tên).", {
             style: {
-              background: 'red', // Màu đỏ
-              color: '#fff', // Chữ trắng
+              background: "red",
+              color: "#fff",
             },
-            duration: 3000, // Toast sẽ hiển thị trong 3 giây
-          })
-          return
+            duration: 3000,
+          });
+          return;
         }
 
-        // Add imported contacts to context
-        addContacts(importedContacts)
-        onImport(importedContacts)
-        toast.success(`Nhập thành công ${importedContacts.length} liên hệ.`, {
-          style: {
-            background: '#28a745', // Màu xanh lá
-            color: '#fff', // Chữ trắng
-          },
-          duration: 3000, // Toast sẽ hiển thị trong 3 giây
-        })
+        try {
+          // Call API to import contacts
+          const response = await addContacts(importedContacts);
+
+          if (response.success) {
+            onImport(importedContacts);
+            // toast.success(
+            //   `Nhập thành công ${importedContacts.length} liên hệ.`,
+            //   {
+            //     style: {
+            //       background: "#28a745",
+            //       color: "#fff",
+            //     },
+            //     duration: 3000,
+            //   }
+            // );
+          }
+        } catch (error) {
+          console.error("Lỗi khi gọi API:", error);
+          // toast.error("Đã xảy ra lỗi khi nhập liên hệ vào hệ thống.", {
+          //   style: {
+          //     background: "red",
+          //     color: "#fff",
+          //   },
+          //   duration: 3000,
+          // });
+        } finally {
+          // Reset input để lần sau chọn lại file vẫn nhận sự kiện
+          if (inputRef.current) inputRef.current.value = "";
+        }
       } catch (err) {
-        console.error('Lỗi đọc file Excel:', err)
+        console.error("Lỗi đọc file Excel:", err);
         toast.error(
-          'Đã xảy ra lỗi khi đọc file. Vui lòng kiểm tra lại định dạng.',
+          "Đã xảy ra lỗi khi đọc file. Vui lòng kiểm tra lại định dạng.",
           {
             style: {
-              background: 'red', // Màu đỏ
-              color: '#fff', // Chữ trắng
+              background: "red",
+              color: "#fff",
             },
-            duration: 3000, // Toast sẽ hiển thị trong 3 giây
+            duration: 3000,
           }
-        )
+        );
+        // Reset input nếu có lỗi đọc file
+        if (inputRef.current) inputRef.current.value = "";
       }
-    }
+    };
 
     reader.onerror = () => {
-      toast.error('Không thể đọc file. Vui lòng thử lại.', {
+      toast.error("Không thể đọc file. Vui lòng thử lại.", {
         style: {
-          background: 'red', // Màu đỏ
-          color: '#fff', // Chữ trắng
+          background: "red",
+          color: "#fff",
         },
-        duration: 3000, // Toast sẽ hiển thị trong 3 giây
-      })
-    }
+        duration: 3000,
+      });
+      // Reset input nếu có lỗi đọc file
+      if (inputRef.current) inputRef.current.value = "";
+    };
 
-    reader.readAsArrayBuffer(file)
-  }
+    reader.readAsArrayBuffer(file);
+  };
 
   return (
     <div className="flex items-center gap-2">
@@ -119,6 +154,7 @@ export default function InputExcel({ onImport }: InputExcelProps) {
         </Button>
       </label>
       <input
+        ref={inputRef}
         id="excel-upload"
         type="file"
         accept=".xlsx, .xls"
@@ -126,5 +162,5 @@ export default function InputExcel({ onImport }: InputExcelProps) {
         onChange={handleImportExcel}
       />
     </div>
-  )
+  );
 }

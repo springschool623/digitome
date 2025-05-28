@@ -1,3 +1,4 @@
+TRUNCATE TABLE roles RESTART IDENTITY CASCADE;
 INSERT INTO Roles (id, role_name, role_description) VALUES
 (1, 'super_admin', 'Toàn quyền quản lý hệ thống, phân quyền và dữ liệu'),
 (2, 'data_entry', 'Nhập liệu và cập nhật thông tin quân nhân'),

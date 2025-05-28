@@ -1,3 +1,4 @@
+TRUNCATE TABLE role_permission RESTART IDENTITY CASCADE;
 -- super_admin
 INSERT INTO Role_Permission (status, role_id, permission_id) VALUES
 ('active', 1, 1), ('active', 1, 2), ('active', 1, 3),

@@ -1,6 +1,6 @@
 // src/api/contacts.ts
 
-import { Contact } from '@/types/contact'
+import { Contact, ContactImport } from '@/types/contact'
 import { toast } from 'sonner'
 
 // Lấy danh sách liên hệ
@@ -114,3 +114,45 @@ export const deleteContact = async (id: number, reason: string) => {
     throw error
   }
 }
+
+// Import nhiều liên hệ từ file Excel
+export const addContacts = async (contacts: ContactImport[]) => {
+  try {
+    const res = await fetch('http://localhost:5000/api/contacts/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contacts }),
+    })
+
+    const data = await res.json()
+
+    if (res.status === 201) {
+      toast.success(`Nhập ${data.data.length} liên hệ thành công!`, {
+        style: { background: "#28a745", color: '#fff' },
+        duration: 3000,
+      })
+    } else if (res.status === 207) {
+      toast.warning(`Một số liên hệ không thể nhập!`, {
+        description: `${data.failed.length} lỗi, ${data.imported.length} thành công.`,
+        style: { background: 'orange', color: '#fff' },
+        duration: 5000,
+      })
+    } else {
+      toast.error('Nhập liên hệ thất bại!', {
+        style: { background: 'red', color: '#fff' },
+        duration: 3000,
+      })
+      throw new Error(data.message || 'Nhập liên hệ thất bại')
+    }
+
+    return data
+  } catch (error) {
+    console.error('Lỗi khi nhập liên hệ:', error)
+    toast.error('Lỗi khi gửi yêu cầu nhập liên hệ!', {
+      style: { background: 'red', color: '#fff' },
+      duration: 3000,
+    })
+    throw error
+  }
+}
+
