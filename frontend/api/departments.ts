@@ -1,7 +1,7 @@
 // Lấy thông tin phòng/ban
 export const getDepartments = async () => {
   try {
-    const res = await fetch(`${dbDomain}/api/departments`)
+    const res = await fetch(`${process.env.DB_Domain}/api/departments`)
     if (!res.ok) throw new Error('Failed to fetch departments')
     return await res.json()
   } catch (error) {
@@ -9,5 +9,3 @@ export const getDepartments = async () => {
     throw error
   }
 }
-
-const dbDomain = 'https://digitome-backend.onrender.com/'

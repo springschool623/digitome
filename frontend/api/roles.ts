@@ -2,8 +2,6 @@
 
 import { toast } from 'sonner'
 
-const dbDomain = 'https://digitome-backend.onrender.com/'
-
 const getTokenFromCookie = (): string | null => {
   const match = document.cookie.match(/(?:^|;\s*)token=([^;]+)/)
   return match ? match[1] : null
@@ -12,7 +10,7 @@ const getTokenFromCookie = (): string | null => {
 export const getRoles = async () => {
   const token = getTokenFromCookie()
   try {
-    const res = await fetch(`${dbDomain}/api/roles`, {
+    const res = await fetch(`${process.env.DB_Domain}/api/roles`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -50,7 +48,7 @@ export const createRole = async (role: {
   role_description: string
 }) => {
   try {
-    const res = await fetch(`${dbDomain}/api/roles`, {
+    const res = await fetch(`${process.env.DB_Domain}/api/roles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(role),
