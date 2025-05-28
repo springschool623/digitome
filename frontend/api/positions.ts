@@ -1,7 +1,9 @@
 // Lấy thông tin chức vụ
 export const getPositions = async () => {
   try {
-    const res = await fetch(`${process.env.DB_Domain}/api/positions`)
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/positions`
+    )
     if (!res.ok) throw new Error('Failed to fetch positions')
     return await res.json()
   } catch (error) {

@@ -9,11 +9,14 @@ const getTokenFromCookie = (): string | null => {
 export const getPermissions = async (): Promise<Permission[]> => {
   const token = getTokenFromCookie()
   try {
-    const res = await fetch(`${process.env.DB_Domain}/api/permissions`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/permissions`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
 
     const data = await res.json()
 

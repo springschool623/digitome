@@ -10,11 +10,14 @@ const getTokenFromCookie = (): string | null => {
 export const getAccounts = async () => {
   const token = getTokenFromCookie()
   try {
-    const res = await fetch(`${process.env.DB_Domain}/api/accounts`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/accounts`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
 
     const data = await res.json()
 
@@ -81,13 +84,16 @@ export const deleteAccount = async (id: number) => {
   const token = getTokenFromCookie()
 
   try {
-    const res = await fetch(`${process.env.DB_Domain}/api/accounts/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // ✅ Thêm token nếu có middleware auth ở backend
-      },
-    })
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/accounts/${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // ✅ Thêm token nếu có middleware auth ở backend
+        },
+      }
+    )
 
     const data = await res.json()
 

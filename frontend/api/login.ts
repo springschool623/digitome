@@ -17,7 +17,7 @@ export const login = async (
 ): Promise<LoginResponse> => {
   try {
     const response = await fetch(
-      `${process.env.DB_Domain}/api/accounts/login`,
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/accounts/login`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -10,7 +10,7 @@ const getTokenFromCookie = (): string | null => {
 export const getRoles = async () => {
   const token = getTokenFromCookie()
   try {
-    const res = await fetch(`${process.env.DB_Domain}/api/roles`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/roles`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -48,7 +48,7 @@ export const createRole = async (role: {
   role_description: string
 }) => {
   try {
-    const res = await fetch(`${process.env.DB_Domain}/api/roles`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/roles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(role),
