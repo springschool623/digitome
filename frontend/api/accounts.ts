@@ -98,11 +98,11 @@ export const deleteAccount = async (id: number) => {
     const data = await res.json()
 
     if (!res.ok) {
-      toast.error(data.message || 'Xóa tài khoản thất bại!', {
+      toast.error(data.message || 'Vô hiệu hóa tài khoản thất bại!', {
         style: { background: 'red', color: '#fff' },
         duration: 3000,
       })
-      throw new Error(data.message || 'Xóa tài khoản thất bại')
+      throw new Error(data.message || 'Vô hiệu hóa tài khoản thất bại')
     }
 
     toast.success('Tài khoản đã bị tạm ngưng!', {
@@ -112,7 +112,20 @@ export const deleteAccount = async (id: number) => {
 
     return data
   } catch (error) {
-    console.error('Lỗi khi xóa tài khoản:', error)
+    console.error('Lỗi khi vô hiệu hóa tài khoản:', error)
+    throw error
+  }
+}
+
+export const getAccount = async (id: number) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/accounts/${id}`
+    )
+    if (!res.ok) throw new Error('Failed to fetch account')
+    return await res.json()
+  } catch (error) {
+    console.error('Lỗi khi lấy thông tin tài khoản:', error)
     throw error
   }
 }

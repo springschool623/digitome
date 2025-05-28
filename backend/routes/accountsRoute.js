@@ -2,9 +2,11 @@ import express from 'express'
 import {
   getAllAccounts,
   loginAccount,
+  getAccount,
+  updateAccount,
+  deleteAccount,
 } from '../controllers/accountsController.js'
 import { authorizeRoles } from '../authorizeRoles.js'
-import { deleteAccount } from '../controllers/accountsController.js'
 
 const router = express.Router()
 
@@ -12,5 +14,7 @@ const router = express.Router()
 router.get('/', getAllAccounts)
 router.post('/login', loginAccount)
 router.delete('/:id', deleteAccount)
+router.get('/:id', getAccount)
+router.put('/:id', updateAccount)
 
 export default router

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { accountColumns, roleColumns } from './columns'
+import { accountColumns } from './columns'
+import { roleColumns } from './roleColumns'
 import { DataTable } from './data-table'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
