@@ -133,8 +133,13 @@ const ActionsCell = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-32">
           {canEdit && (
-            <DropdownMenuItem>
-              <Link href={`/accounts/edit/${account.id}`}>Chỉnh sửa</Link>
+            <DropdownMenuItem asChild>
+              <Link
+                href={`/accounts/edit/${account.id}`}
+                className="cursor-pointer"
+              >
+                Chỉnh sửa
+              </Link>
             </DropdownMenuItem>
           )}
           {canEdit && showDeleteButton && <DropdownMenuSeparator />}

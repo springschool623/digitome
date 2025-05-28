@@ -1,5 +1,6 @@
 // src/api/accounts.ts
 
+import { Account } from '@/types/account'
 import { toast } from 'sonner'
 
 const getTokenFromCookie = (): string | null => {
@@ -126,6 +127,24 @@ export const getAccount = async (id: number) => {
     return await res.json()
   } catch (error) {
     console.error('Lỗi khi lấy thông tin tài khoản:', error)
+    throw error
+  }
+}
+
+export const updateAccount = async (id: number, account: Account) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/accounts/${id}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(account),
+      }
+    )
+    if (!res.ok) throw new Error('Failed to update account')
+    return await res.json()
+  } catch (error) {
+    console.error('Lỗi khi cập nhật tài khoản:', error)
     throw error
   }
 }

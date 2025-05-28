@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { SidebarInset } from '@/components/ui/sidebar'
 import Header from '@/components/PageHeader'
 import { toast } from 'sonner'
-import { getAccount } from '@/api/accounts'
+import { getAccount, updateAccount } from '@/api/accounts'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Account } from '@/types/account'
@@ -44,21 +44,21 @@ function EditAccountContent({ id }: { id: string }) {
   const [roles, setRoles] = useState<{ id: number; role_name: string }[]>([])
   const [displayNames, setDisplayNames] = useState<Record<string, string>>({
     role_name: '',
+    status_name: '',
   })
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [accountsData, rolesData] = await Promise.all([
+        const [accountData, rolesData] = await Promise.all([
           getAccount(parseInt(id)),
           getRoles(),
         ])
-        const accountData = accountsData.find(
-          (acc: Account) => acc.id === parseInt(id)
-        )
+
         if (!accountData) {
           throw new Error('Account not found')
         }
+
         setAccount(accountData)
         setRoles(rolesData)
       } catch (error) {
@@ -80,6 +80,14 @@ function EditAccountContent({ id }: { id: string }) {
       // Update role name
       const role = roles.find((r) => r.id === Number(account.role_id))
       if (role) newDisplayNames.role_name = role.role_name
+
+      // Update status name
+      const statusMap: Record<string, string> = {
+        active: 'Hoạt động',
+        inactive: 'Không hoạt động',
+        suspended: 'Tạm ngưng',
+      }
+      newDisplayNames.status_name = statusMap[account.status] || account.status
 
       setDisplayNames(newDisplayNames)
     }
@@ -125,7 +133,8 @@ function EditAccountContent({ id }: { id: string }) {
     setSaving(true)
     try {
       // TODO: Implement updateAccount API call
-      // await updateAccount(account.id, account)
+      await updateAccount(account.id, account)
+
       toast.success('Cập nhật tài khoản thành công!', {
         style: {
           background: '#28a745',
