@@ -51,13 +51,13 @@ const data = {
   ],
   navMain: [
     {
-      title: 'Danh bạ Điện thoại',
+      title: 'Danh mục chính',
       url: '#',
       icon: Phone,
       isActive: true,
       items: [
         {
-          title: 'Danh mục chính',
+          title: 'Danh bạ quân sự',
           url: '/contacts',
         },
         {
