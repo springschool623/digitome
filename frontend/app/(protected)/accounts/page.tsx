@@ -21,7 +21,7 @@ import { usePermission } from '@/hooks/usePermission'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
-  { label: 'Người dùng', href: 'users' },
+  { label: 'Danh mục chính' },
   { label: 'Danh sách tài khoản' },
 ]
 
