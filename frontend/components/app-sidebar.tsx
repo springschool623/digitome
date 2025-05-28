@@ -3,7 +3,7 @@
 import * as React from 'react'
 import {
   AudioWaveform,
-  Bot,
+  // Bot,
   Command,
   GalleryVerticalEnd,
   Map,
@@ -61,34 +61,38 @@ const data = {
           url: '/contacts',
         },
         {
-          title: 'Starred',
-          url: '#',
-        },
-        {
-          title: 'Settings',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Chức năng phụ',
-      url: '#',
-      icon: Bot,
-      items: [
-        {
           title: 'Phân quyền',
           url: '/accounts',
         },
-        {
-          title: 'Explorer',
-          url: '#',
-        },
-        {
-          title: 'Quantum',
-          url: '#',
-        },
+        // {
+        //   title: 'Starred',
+        //   url: '#',
+        // },
+        // {
+        //   title: 'Settings',
+        //   url: '#',
+        // },
       ],
     },
+    // {
+    //   title: 'Chức năng phụ',
+    //   url: '#',
+    //   icon: Bot,
+    //   items: [
+    //     {
+    //       title: 'Phân quyền',
+    //       url: '/accounts',
+    //     },
+    //     // {
+    //     //   title: 'Explorer',
+    //     //   url: '#',
+    //     // },
+    //     // {
+    //     //   title: 'Quantum',
+    //     //   url: '#',
+    //     // },
+    //   ],
+    // },
     // {
     //   title: 'Documentation',
     //   url: '#',
