@@ -1,7 +1,10 @@
 'use client'
 
+import { Account } from '@/types/account'
+import { ColumnDef } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
+import { MoreHorizontal } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,9 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Account } from '@/types/account'
-import { ColumnDef } from '@tanstack/react-table'
-import { MoreVerticalIcon } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useState } from 'react'
+import { useUser } from '@/hooks/useUser'
+import Link from 'next/link'
+import { toast } from 'sonner'
+import { deleteAccount } from '@/api/accounts'
 import {
   Dialog,
   DialogContent,
@@ -20,11 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useEffect, useState } from 'react'
-import { deleteAccount } from '@/api/accounts'
-import { toast } from 'sonner'
-import { useUser } from '@/hooks/useUser'
-import Link from 'next/link'
 
 const DeleteDialog = ({
   isOpen,
@@ -35,26 +36,8 @@ const DeleteDialog = ({
   onClose: () => void
   onConfirm: () => void
 }) => {
-  // Cleanup pointer-events khi dialog đóng hoặc component unmount
-  useEffect(() => {
-    if (!isOpen) {
-      document.body.style.pointerEvents = ''
-    }
-    return () => {
-      document.body.style.pointerEvents = ''
-    }
-  }, [isOpen])
-
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) {
-          document.body.style.pointerEvents = ''
-          onClose()
-        }
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Xác nhận xóa</DialogTitle>
@@ -127,7 +110,7 @@ const ActionsCell = ({
             className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
             size="icon"
           >
-            <MoreVerticalIcon />
+            <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
@@ -142,7 +125,7 @@ const ActionsCell = ({
               </Link>
             </DropdownMenuItem>
           )}
-          {canEdit && showDeleteButton && <DropdownMenuSeparator />}
+          {canDelete && showDeleteButton && <DropdownMenuSeparator />}
           {showDeleteButton && (
             <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)}>
               Vô hiệu hóa
@@ -164,7 +147,7 @@ const ActionsCell = ({
 
 export const accountColumns = (
   hasPermission: (permission: string) => boolean,
-  onStatusChange: (id: number, newStatus: string) => void
+  handleStatusChange: (id: number, newStatus: string) => void
 ): ColumnDef<Account>[] => [
   {
     id: 'select',
@@ -198,7 +181,7 @@ export const accountColumns = (
   },
   {
     accessorKey: 'mobile_no',
-    header: 'SĐT',
+    header: 'Số điện thoại',
   },
   {
     accessorKey: 'password',
@@ -207,29 +190,26 @@ export const accountColumns = (
   },
   {
     accessorKey: 'role_name',
-    header: 'Quyền',
+    header: 'Quyền',
     cell: ({ row }) => {
-      const name = row.getValue('role_name') as string
-      return <span className="uppercase">{name}</span>
+      const roles = row.original.roles || []
+      return (
+        <div className="flex gap-1">
+          {roles.map((role) => (
+            <Badge key={role.id} variant="secondary">
+              {role.role_name}
+            </Badge>
+          ))}
+        </div>
+      )
     },
   },
   {
     accessorKey: 'updated_at',
     header: 'Cập nhật lúc',
     cell: ({ row }) => {
-      const rawDate = row.getValue('updated_at') as string
-      const date = new Date(rawDate)
-
-      const formatTime = date.toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      })
-
-      const formatDate = date.toLocaleDateString('vi-VN')
-
-      return <span>{`${formatTime} ${formatDate}`}</span>
+      const date = new Date(row.getValue('updated_at'))
+      return date.toLocaleString('vi-VN')
     },
   },
   {
@@ -241,28 +221,23 @@ export const accountColumns = (
     header: 'Trạng thái',
     cell: ({ row }) => {
       const status = row.getValue('status') as string
-
       let colorClass = ''
-      switch (status.toLowerCase()) {
+      switch (status) {
         case 'active':
-          colorClass = 'bg-green-600 text-green-50'
-          break
-        case 'inactive':
-          colorClass = 'bg-gray-400 text-gray-50'
+          colorClass = 'bg-green-500 text-white'
           break
         case 'suspended':
-          colorClass = 'bg-red-700 text-red-50'
+          colorClass = 'bg-red-500 text-white'
           break
+        case 'inactive':
+          colorClass = 'bg-gray-400 text-white'
+          break
+        default:
+          colorClass = 'bg-gray-200 text-black'
       }
-
-      const capitalizedStatus =
-        status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
-
       return (
-        <span
-          className={`px-4 py-2 rounded-full text-sm font-medium ${colorClass}`}
-        >
-          {capitalizedStatus}
+        <span className={`px-4 py-2 rounded-full capitalize ${colorClass}`}>
+          {status}
         </span>
       )
     },
@@ -274,7 +249,7 @@ export const accountColumns = (
       <ActionsCell
         row={row}
         hasPermission={hasPermission}
-        onStatusChange={onStatusChange}
+        onStatusChange={handleStatusChange}
       />
     ),
   },

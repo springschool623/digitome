@@ -227,6 +227,7 @@ export const updateAccountRole = async (req, res) => {
 // Thêm hàng loạt quyền cho tài khoản
 export const addRolesToAccount = async (req, res) => {
   const { account_id, role_ids } = req.body
+  console.log('Received data (addRoles):', { account_id, role_ids })
 
   try {
     const results = []
@@ -239,6 +240,7 @@ export const addRolesToAccount = async (req, res) => {
     }
     res.status(201).json(results)
   } catch (error) {
+    console.error('Error in addRolesToAccount:', error)
     res.status(500).json({ error: 'Failed to add roles to account' })
   }
 }
@@ -246,6 +248,7 @@ export const addRolesToAccount = async (req, res) => {
 // Xóa hàng loạt quyền tài khoản
 export const removeRolesFromAccount = async (req, res) => {
   const { account_id, role_ids } = req.body
+  console.log('Received data (removeRoles):', { account_id, role_ids })
 
   try {
     const results = []
@@ -258,11 +261,7 @@ export const removeRolesFromAccount = async (req, res) => {
     }
     res.status(200).json(results)
   } catch (error) {
+    console.error('Error in removeRolesFromAccount:', error)
     res.status(500).json({ error: 'Failed to remove roles from account' })
   }
 }
-
-
-
-
-

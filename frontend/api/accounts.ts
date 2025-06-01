@@ -141,3 +141,64 @@ export const updateAccount = async (id: number, account: Account) => {
     throw error
   }
 }
+
+export const addRolesToAccount = async (
+  accountId: number,
+  roleIds: number[]
+) => {
+  const token = getTokenFromCookie()
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/accounts/${accountId}/roles`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role_ids: roleIds }),
+      }
+    )
+
+    if (!res.ok) {
+      const data = await res.json()
+      console.log(data)
+      throw new Error(data.error || 'Failed to add roles to account')
+    }
+
+    return await res.json()
+  } catch (error) {
+    console.error('Error adding roles to account:', error)
+    throw error
+  }
+}
+
+export const removeRolesFromAccount = async (
+  accountId: number,
+  roleIds: number[]
+) => {
+  const token = getTokenFromCookie()
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/accounts/${accountId}/roles`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role_ids: roleIds }),
+      }
+    )
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.error || 'Failed to remove roles from account')
+    }
+
+    return await res.json()
+  } catch (error) {
+    console.error('Error removing roles from account:', error)
+    throw error
+  }
+}

@@ -28,6 +28,14 @@ import {
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getRoles } from '@/api/roles'
+import { useUser } from '@/hooks/useUser'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
@@ -46,6 +54,8 @@ function EditAccountContent({ id }: { id: string }) {
     role_name: '',
     status_name: '',
   })
+  const currentUser = useUser()
+  const isCurrentUser = currentUser?.id === account?.id
 
   useEffect(() => {
     const fetchData = async () => {
@@ -222,104 +232,100 @@ function EditAccountContent({ id }: { id: string }) {
                         )}
                       </Label>
                       {type === 'select' ? (
-                        <Popover
-                          open={openSelect === field}
-                          onOpenChange={(isOpen) =>
-                            setOpenSelect(isOpen ? field : null)
-                          }
-                        >
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={openSelect === field}
-                              className={cn('w-full justify-between')}
-                            >
-                              {displayNames[
-                                `${
-                                  field.split('_')[0]
-                                }_name` as keyof typeof displayNames
-                              ] || 'Chọn...'}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
-                            <Command>
-                              <CommandInput placeholder="Tìm kiếm..." />
-                              <CommandEmpty>Không tìm thấy.</CommandEmpty>
-                              <CommandGroup>
-                                {(field === 'role_id'
-                                  ? roles
-                                  : field === 'status'
-                                  ? [
-                                      { id: 'active', role_name: 'Hoạt động' },
-                                      {
-                                        id: 'inactive',
-                                        role_name: 'Không hoạt động',
-                                      },
-                                      {
-                                        id: 'suspended',
-                                        role_name: 'Tạm ngưng',
-                                      },
-                                    ]
-                                  : []
-                                ).map((option) => (
-                                  <CommandItem
-                                    key={option.id}
-                                    value={option.role_name}
-                                    onSelect={(currentValue) => {
-                                      const selectedOption = (
-                                        field === 'role_id'
-                                          ? roles
-                                          : field === 'status'
-                                          ? [
-                                              {
-                                                id: 'active',
-                                                role_name: 'Hoạt động',
-                                              },
-                                              {
-                                                id: 'inactive',
-                                                role_name: 'Không hoạt động',
-                                              },
-                                              {
-                                                id: 'suspended',
-                                                role_name: 'Tạm ngưng',
-                                              },
-                                            ]
-                                          : []
-                                      ).find(
-                                        (item) =>
-                                          item.role_name === currentValue
-                                      )
+                        field === 'status' ? (
+                          <Select
+                            value={account.status}
+                            onValueChange={(value) =>
+                              handleChange(field, value)
+                            }
+                            disabled={isCurrentUser}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Chọn trạng thái..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="active">Hoạt động</SelectItem>
+                              <SelectItem value="inactive">
+                                Không hoạt động
+                              </SelectItem>
+                              <SelectItem value="suspended">
+                                Tạm ngưng
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Popover
+                            open={openSelect === field}
+                            onOpenChange={(isOpen) =>
+                              setOpenSelect(isOpen ? field : null)
+                            }
+                          >
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={openSelect === field}
+                                className={cn('w-full justify-between')}
+                              >
+                                {displayNames[
+                                  `${
+                                    field.split('_')[0]
+                                  }_name` as keyof typeof displayNames
+                                ] || 'Chọn...'}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0">
+                              <Command>
+                                <CommandInput placeholder="Tìm kiếm..." />
+                                <CommandEmpty>Không tìm thấy.</CommandEmpty>
+                                <CommandGroup>
+                                  {(field === 'role_id' ? roles : []).map(
+                                    (option) => (
+                                      <CommandItem
+                                        key={option.id}
+                                        value={option.role_name}
+                                        onSelect={(currentValue) => {
+                                          const selectedOption = (
+                                            field === 'role_id' ? roles : []
+                                          ).find(
+                                            (item) =>
+                                              item.role_name === currentValue
+                                          )
 
-                                      if (selectedOption) {
-                                        handleChange(field, selectedOption.id)
-                                        setDisplayNames((prev) => ({
-                                          ...prev,
-                                          [`${field.split('_')[0]}_name`]:
-                                            selectedOption.role_name,
-                                        }))
-                                      }
-                                      setOpenSelect(null)
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        'mr-2 h-4 w-4',
-                                        displayNames[
-                                          `${field.split('_')[0]}_name`
-                                        ] === option.role_name
-                                          ? 'opacity-100'
-                                          : 'opacity-0'
-                                      )}
-                                    />
-                                    {option.role_name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                                          if (selectedOption) {
+                                            handleChange(
+                                              field,
+                                              selectedOption.id
+                                            )
+                                            setDisplayNames((prev) => ({
+                                              ...prev,
+                                              [`${field.split('_')[0]}_name`]:
+                                                selectedOption.role_name,
+                                            }))
+                                          }
+                                          setOpenSelect(null)
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            'mr-2 h-4 w-4',
+                                            displayNames[
+                                              `${field.split('_')[0]}_name`
+                                            ] === option.role_name
+                                              ? 'opacity-100'
+                                              : 'opacity-0'
+                                          )}
+                                        />
+                                        {option.role_name}
+                                      </CommandItem>
+                                    )
+                                  )}
+                                </CommandGroup>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        )
                       ) : (
                         <Input
                           id={field}

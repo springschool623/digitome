@@ -93,8 +93,9 @@ export default function AccountPage() {
 
   const getFilteredAccounts = useMemo(() => {
     return accounts.filter((c) =>
-      [c.mobile_no, c.role_id, c.status, c.created_by, c.updated_at]
+      [c.mobile_no, c.status, c.created_by_name, c.updated_at]
         .filter(Boolean)
+        .map(String)
         .some((val) => val.toLowerCase().includes(search.toLowerCase()))
     )
   }, [accounts, search])
@@ -104,8 +105,8 @@ export default function AccountPage() {
       <Header breadcrumbs={breadcrumbs} />
       <Tabs defaultValue="accounts">
         <TabsList className="px-4">
-          <TabsTrigger value="accounts">Tài Khoản</TabsTrigger>
-          <TabsTrigger value="roles">Phân Quyền</TabsTrigger>
+          <TabsTrigger value="accounts">Tài Khoản</TabsTrigger>
+          <TabsTrigger value="roles">Phân Quyền</TabsTrigger>
         </TabsList>
         <div className="flex flex-1 flex-col gap-4 p-4">
           <div className="flex items-center justify-between mt-2">
@@ -116,13 +117,13 @@ export default function AccountPage() {
               className="w-80"
             />
             <div className="flex gap-2">
-              {hasPermission('ASSIGN_ROLES') && (
+              {hasPermission('ASSIGN_ROLES') && accounts[0] && (
                 <Button
                   variant="outline"
                   className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
                 >
                   <Plus />
-                  Cấp quyền tài khoản
+                  Cấp quyền tài khoản
                 </Button>
               )}
               {hasPermission('CREATE_ROLES') && (
