@@ -47,14 +47,7 @@ export const getAccounts = async () => {
   }
 }
 
-export const createAccount = async (account: {
-  mobile_no: string
-  password: string
-  role_id: string
-  updated_at: string
-  created_by: string
-  status: string
-}) => {
+export const createAccount = async (account: Account) => {
   try {
     const res = await fetch('http://localhost:5000/api/accounts', {
       method: 'POST',
@@ -106,8 +99,8 @@ export const deleteAccount = async (id: number) => {
       throw new Error(data.message || 'Vô hiệu hóa tài khoản thất bại')
     }
 
-    toast.success('Tài khoản đã bị tạm ngưng!', {
-      style: { background: 'green', color: '#fff' },
+    toast.success('Tài khoản đã bị vô hiệu hóa!', {
+      style: { background: 'black', color: '#fff' },
       duration: 3000,
     })
 

@@ -23,6 +23,7 @@ const SEED_ORDER = [
   // User data
   'contacts.seed.sql',
   'accounts.seed.sql',
+  'account_role.seed.sql',
 ]
 
 async function runSeeds() {

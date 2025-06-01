@@ -12,7 +12,8 @@ export const getAllAccounts = async (req, res) => {
       SELECT a.id, a.mobile_no, r.role_name, a.updated_at, 
              a.created_by, a.status, c.manager as created_by_name
       FROM accounts a 
-      JOIN roles r ON a.role_id = r.id
+      JOIN account_role ar ON a.id = ar.account_id
+      JOIN roles r ON ar.role_id = r.id
       LEFT JOIN contacts c ON a.created_by = c.id
       ORDER BY a.id ASC
     `)
@@ -30,7 +31,8 @@ export const getAccount = async (req, res) => {
       `
       SELECT a.*, r.role_name, c.manager as created_by_name
       FROM accounts a
-      JOIN roles r ON a.role_id = r.id
+      JOIN account_role ar ON a.id = ar.account_id
+      JOIN roles r ON ar.role_id = r.id
       LEFT JOIN contacts c ON a.created_by = c.id
       WHERE a.id = $1
     `,
@@ -49,14 +51,14 @@ export const getAccount = async (req, res) => {
 
 // Tạo tài khoản mới
 export const createAccount = async (req, res) => {
-  const { mobile_no, password, role_id, created_by } = req.body
+  const { mobile_no, password, created_by } = req.body
 
   try {
     const result = await pool.query(
-      `INSERT INTO accounts (mobile_no, password, role_id, created_by, status)
-       VALUES ($1, $2, $3, $4, 'active')
+      `INSERT INTO accounts (mobile_no, password, created_by, status)
+       VALUES ($1, $2, $3, 'active')
        RETURNING *`,
-      [mobile_no, password, role_id, created_by]
+      [mobile_no, password, created_by]
     )
     res.status(201).json(result.rows[0])
   } catch (error) {
@@ -75,19 +77,18 @@ export const createAccount = async (req, res) => {
 // Cập nhật tài khoản
 export const updateAccount = async (req, res) => {
   const { id } = req.params
-  const { mobile_no, password, role_id, status } = req.body
+  const { mobile_no, password, status } = req.body
 
   try {
     const result = await pool.query(
       `UPDATE accounts 
        SET mobile_no = $1, 
            password = $2, 
-           role_id = $3,
-           status = $4,
+           status = $3,
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $5 
+       WHERE id = $4 
        RETURNING *`,
-      [mobile_no, password, role_id, status, id]
+      [mobile_no, password, status, id]
     )
 
     if (result.rows.length === 0) {
@@ -116,7 +117,8 @@ export const loginAccount = async (req, res) => {
     const result = await pool.query(
       `SELECT a.*, r.role_name 
        FROM accounts a
-       JOIN roles r ON a.role_id = r.id 
+       JOIN account_role ar ON a.id = ar.account_id
+       JOIN roles r ON ar.role_id = r.id 
        WHERE a.mobile_no = $1`,
       [mobile_no]
     )
@@ -180,7 +182,87 @@ export const deleteAccount = async (req, res) => {
 
     res.json({ message: 'Tài khoản đã bị tạm ngưng', account: result.rows[0] })
   } catch (error) {
-    console.error('Error suspending account:', error) // ✅ Logging for debugging
+    console.error('Error suspending account:', error)
     res.status(500).json({ error: 'Failed to suspend account' })
   }
 }
+
+// Cập nhật trạng thái tài khoản
+export const updateAccountStatus = async (req, res) => {
+  const { id } = req.params
+  const { status } = req.body
+
+  try {
+    const result = await pool.query(
+      `UPDATE accounts SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+      [status, id]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Account not found' })
+    }
+
+    res.json(result.rows[0])
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update account status' })
+  }
+}
+
+// Cập nhật quyền tài khoản
+export const updateAccountRole = async (req, res) => {
+  const { id } = req.params
+  const { role_id } = req.body
+
+  try {
+    const result = await pool.query(
+      `UPDATE account_role SET role_id = $1 WHERE account_id = $2 RETURNING *`,
+      [role_id, id]
+    )
+    res.status(200).json(result.rows[0])
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update account role' })
+  }
+}
+
+// Thêm hàng loạt quyền cho tài khoản
+export const addRolesToAccount = async (req, res) => {
+  const { account_id, role_ids } = req.body
+
+  try {
+    const results = []
+    for (const role_id of role_ids) {
+      const result = await pool.query(
+        `INSERT INTO account_role (account_id, role_id) VALUES ($1, $2) RETURNING *`,
+        [account_id, role_id]
+      )
+      results.push(result.rows[0])
+    }
+    res.status(201).json(results)
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add roles to account' })
+  }
+}
+
+// Xóa hàng loạt quyền tài khoản
+export const removeRolesFromAccount = async (req, res) => {
+  const { account_id, role_ids } = req.body
+
+  try {
+    const results = []
+    for (const role_id of role_ids) {
+      const result = await pool.query(
+        `DELETE FROM account_role WHERE account_id = $1 AND role_id = $2 RETURNING *`,
+        [account_id, role_id]
+      )
+      results.push(result.rows[0])
+    }
+    res.status(200).json(results)
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to remove roles from account' })
+  }
+}
+
+
+
+
+
