@@ -10,11 +10,11 @@ export const getAllAccounts = async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT a.id, a.mobile_no, a.role_id, r.role_name, a.updated_at, 
-             a.created_by, a.status, c.manager as created_by_name
+             a.created_by, a.status, c.name as created_by_name
       FROM accounts a 
       JOIN roles r ON a.role_id = r.id
       LEFT JOIN contacts c ON a.created_by = c.id
-      ORDER BY a.id ASC
+      ORDER BY a.id ASC 
     `)
     res.json(result.rows)
   } catch (error) {
@@ -28,7 +28,7 @@ export const getAccount = async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT a.*, r.role_name, c.manager as created_by_name, a.role_id
+      SELECT a.*, r.role_name, c.name as created_by_name, a.role_id
       FROM accounts a 
       JOIN roles r ON a.role_id = r.id
       LEFT JOIN contacts c ON a.created_by = c.id
@@ -113,7 +113,7 @@ export const loginAccount = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT a.*, r.role_name, c.manager
+      `SELECT a.*, r.role_name, c.name
        FROM accounts a
        JOIN roles r ON a.role_id = r.id 
        JOIN contacts c ON a.mobile_no = c.mobile_no
@@ -143,7 +143,7 @@ export const loginAccount = async (req, res) => {
         id: user.id,
         mobile_no: user.mobile_no,
         role: user.role_name,
-        user_name: user.manager,
+        user_name: user.name,
       },
       SECRET_KEY,
       { expiresIn: '1h' }
@@ -157,7 +157,7 @@ export const loginAccount = async (req, res) => {
         id: user.id,
         mobile_no: user.mobile_no,
         role: user.role_name,
-        user_name: user.manager,
+        user_name: user.name,
       },
     })
   } catch (error) {

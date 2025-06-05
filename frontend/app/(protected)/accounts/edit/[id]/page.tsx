@@ -1,60 +1,60 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { SidebarInset } from '@/components/ui/sidebar'
-import Header from '@/components/PageHeader'
-import { toast } from 'sonner'
-import { getAccount, updateAccount } from '@/api/accounts'
-import { Loader2, ArrowLeft } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Account } from '@/types/account'
-import React from 'react'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SidebarInset } from "@/components/ui/sidebar";
+import Header from "@/components/PageHeader";
+import { toast } from "sonner";
+import { getAccount, updateAccount } from "@/api/accounts";
+import { Loader2, ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Account } from "@/types/account";
+import React from "react";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from '@/components/ui/command'
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
-import { Check, ChevronsUpDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { getRoles } from '@/api/roles'
-import { useUser } from '@/hooks/useUser'
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getRoles } from "@/api/roles";
+import { useUser } from "@/hooks/useUser";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
 const breadcrumbs = [
-  { label: 'Dashboard', href: 'dashboard' },
-  { label: 'Quản lý tài khoản', href: 'accounts' },
-  { label: 'Chỉnh sửa tài khoản' },
-]
+  { label: "Dashboard", href: "dashboard" },
+  { label: "Quản lý tài khoản", href: "accounts" },
+  { label: "Chỉnh sửa tài khoản" },
+];
 
 function EditAccountContent({ id }: { id: string }) {
-  const router = useRouter()
-  const [account, setAccount] = useState<Account | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [openSelect, setOpenSelect] = useState<string | null>(null)
-  const [roles, setRoles] = useState<{ id: number; role_name: string }[]>([])
+  const router = useRouter();
+  const [account, setAccount] = useState<Account | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [openSelect, setOpenSelect] = useState<string | null>(null);
+  const [roles, setRoles] = useState<{ id: number; role_name: string }[]>([]);
   const [displayNames, setDisplayNames] = useState<Record<string, string>>({
-    role_name: '',
-  })
-  const currentUser = useUser()
-  const isCurrentUser = currentUser?.id === account?.id
+    role_name: "",
+  });
+  const currentUser = useUser();
+  const isCurrentUser = currentUser?.id === account?.id;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,101 +62,101 @@ function EditAccountContent({ id }: { id: string }) {
         const [accountData, rolesData] = await Promise.all([
           getAccount(parseInt(id)),
           getRoles(),
-        ])
+        ]);
 
         if (!accountData) {
-          throw new Error('Account not found')
+          throw new Error("Account not found");
         }
 
-        setAccount(accountData)
-        setRoles(rolesData)
+        setAccount(accountData);
+        setRoles(rolesData);
       } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu:', error)
-        toast.error('Không thể lấy thông tin tài khoản!')
+        console.error("Lỗi khi lấy dữ liệu:", error);
+        toast.error("Không thể lấy thông tin tài khoản!");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [id])
+    fetchData();
+  }, [id]);
 
   // Add new effect to update displayNames when account is loaded
   useEffect(() => {
     if (account) {
-      const newDisplayNames: Record<string, string> = {}
+      const newDisplayNames: Record<string, string> = {};
 
       // Update role name
-      const role = roles.find((r) => r.id === Number(account.role_id))
-      if (role) newDisplayNames.role_name = role.role_name
+      const role = roles.find((r) => r.id === Number(account.role_id));
+      if (role) newDisplayNames.role_name = role.role_name;
 
-      setDisplayNames(newDisplayNames)
+      setDisplayNames(newDisplayNames);
     }
-  }, [account, roles])
+  }, [account, roles]);
 
   const handleChange = (field: keyof Account, value: string | number) => {
     if (account) {
-      setAccount({ ...account, [field]: value })
+      setAccount({ ...account, [field]: value });
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    if (!account) return
+    if (!account) return;
 
     // Kiểm tra giá trị bắt buộc
     if (!account.mobile_no.trim() || !account.role_id) {
-      toast.error('Số điện thoại và quyền là bắt buộc!', {
+      toast.error("Số điện thoại và quyền là bắt buộc!", {
         style: {
-          background: 'red',
-          color: '#fff',
+          background: "red",
+          color: "#fff",
         },
         duration: 3000,
-      })
-      return
+      });
+      return;
     }
 
     // Kiểm tra định dạng số điện thoại
-    const phoneRegex = /^[0-9]{10,11}$/
+    const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(account.mobile_no)) {
       toast.error(
-        'Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10-11 số.',
+        "Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10-11 số.",
         {
           style: {
-            background: 'red',
-            color: '#fff',
+            background: "red",
+            color: "#fff",
           },
           duration: 3000,
         }
-      )
-      return
+      );
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       // TODO: Implement updateAccount API call
-      await updateAccount(account.id, account)
+      await updateAccount(account.id, account);
 
-      toast.success('Cập nhật tài khoản thành công!', {
+      toast.success("Cập nhật tài khoản thành công!", {
         style: {
-          background: '#28a745',
-          color: '#fff',
+          background: "oklch(44.8% 0.119 151.328)",
+          color: "#fff",
         },
         duration: 3000,
-      })
-      router.push('/accounts')
+      });
+      router.push("/accounts");
     } catch (error) {
-      console.error('Lỗi khi cập nhật tài khoản:', error)
-      toast.error('Đã xảy ra lỗi khi cập nhật tài khoản!', {
+      console.error("Lỗi khi cập nhật tài khoản:", error);
+      toast.error("Đã xảy ra lỗi khi cập nhật tài khoản!", {
         style: {
-          background: 'red',
-          color: '#fff',
+          background: "red",
+          color: "#fff",
         },
         duration: 3000,
-      })
+      });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -171,7 +171,7 @@ function EditAccountContent({ id }: { id: string }) {
           </div>
         </div>
       </SidebarInset>
-    )
+    );
   }
 
   if (!account) {
@@ -183,7 +183,7 @@ function EditAccountContent({ id }: { id: string }) {
             <p className="text-destructive text-lg">Không tìm thấy tài khoản</p>
             <Button
               variant="outline"
-              onClick={() => router.push('/accounts')}
+              onClick={() => router.push("/accounts")}
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -192,7 +192,7 @@ function EditAccountContent({ id }: { id: string }) {
           </div>
         </div>
       </SidebarInset>
-    )
+    );
   }
 
   return (
@@ -209,10 +209,10 @@ function EditAccountContent({ id }: { id: string }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {(
                     [
-                      ['mobile_no', 'Số điện thoại', true, 'input'],
-                      ['password', 'Mật khẩu', true, 'input'],
-                      ['role_id', 'Quyền', true, 'select'],
-                      ['status', 'Trạng thái', true, 'select'],
+                      ["mobile_no", "Số điện thoại", true, "input"],
+                      ["password", "Mật khẩu", true, "input"],
+                      ["role_id", "Quyền", true, "select"],
+                      ["status", "Trạng thái", true, "select"],
                     ] as const
                   ).map(([field, label, required, type]) => (
                     <div key={field} className="flex flex-col gap-2">
@@ -222,8 +222,8 @@ function EditAccountContent({ id }: { id: string }) {
                           <span className="text-destructive">*</span>
                         )}
                       </Label>
-                      {type === 'select' ? (
-                        field === 'status' ? (
+                      {type === "select" ? (
+                        field === "status" ? (
                           <Select
                             value={account.status}
                             onValueChange={(value) =>
@@ -256,13 +256,13 @@ function EditAccountContent({ id }: { id: string }) {
                                 variant="outline"
                                 role="combobox"
                                 aria-expanded={openSelect === field}
-                                className={cn('w-full justify-between')}
+                                className={cn("w-full justify-between")}
                               >
                                 {displayNames[
                                   `${
-                                    field.split('_')[0]
+                                    field.split("_")[0]
                                   }_name` as keyof typeof displayNames
-                                ] || 'Chọn...'}
+                                ] || "Chọn..."}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
                             </PopoverTrigger>
@@ -271,41 +271,41 @@ function EditAccountContent({ id }: { id: string }) {
                                 <CommandInput placeholder="Tìm kiếm..." />
                                 <CommandEmpty>Không tìm thấy.</CommandEmpty>
                                 <CommandGroup>
-                                  {(field === 'role_id' ? roles : []).map(
+                                  {(field === "role_id" ? roles : []).map(
                                     (option) => (
                                       <CommandItem
                                         key={option.id}
                                         value={option.role_name}
                                         onSelect={(currentValue) => {
                                           const selectedOption = (
-                                            field === 'role_id' ? roles : []
+                                            field === "role_id" ? roles : []
                                           ).find(
                                             (item) =>
                                               item.role_name === currentValue
-                                          )
+                                          );
 
                                           if (selectedOption) {
                                             handleChange(
                                               field,
                                               selectedOption.id
-                                            )
+                                            );
                                             setDisplayNames((prev) => ({
                                               ...prev,
-                                              [`${field.split('_')[0]}_name`]:
+                                              [`${field.split("_")[0]}_name`]:
                                                 selectedOption.role_name,
-                                            }))
+                                            }));
                                           }
-                                          setOpenSelect(null)
+                                          setOpenSelect(null);
                                         }}
                                       >
                                         <Check
                                           className={cn(
-                                            'mr-2 h-4 w-4',
+                                            "mr-2 h-4 w-4",
                                             displayNames[
-                                              `${field.split('_')[0]}_name`
+                                              `${field.split("_")[0]}_name`
                                             ] === option.role_name
-                                              ? 'opacity-100'
-                                              : 'opacity-0'
+                                              ? "opacity-100"
+                                              : "opacity-0"
                                           )}
                                         />
                                         {option.role_name}
@@ -320,11 +320,11 @@ function EditAccountContent({ id }: { id: string }) {
                       ) : (
                         <Input
                           id={field}
-                          type={field === 'password' ? 'password' : 'text'}
+                          type={field === "password" ? "password" : "text"}
                           placeholder={`Nhập ${label.toLowerCase()}...`}
                           value={account?.[field]}
                           onChange={(e) => handleChange(field, e.target.value)}
-                          className={required ? 'border-primary' : ''}
+                          className={required ? "border-primary" : ""}
                         />
                       )}
                     </div>
@@ -334,7 +334,7 @@ function EditAccountContent({ id }: { id: string }) {
                 <div className="flex justify-end gap-4 pt-4 border-t">
                   <Button
                     variant="outline"
-                    onClick={() => router.push('/accounts')}
+                    onClick={() => router.push("/accounts")}
                     className="gap-2"
                   >
                     <ArrowLeft className="h-4 w-4" />
@@ -351,7 +351,7 @@ function EditAccountContent({ id }: { id: string }) {
                         Đang lưu...
                       </>
                     ) : (
-                      'Lưu thay đổi'
+                      "Lưu thay đổi"
                     )}
                   </Button>
                 </div>
@@ -361,13 +361,13 @@ function EditAccountContent({ id }: { id: string }) {
         </div>
       </div>
     </SidebarInset>
-  )
+  );
 }
 
 export default function EditAccountPage(unwrappedProps: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = React.use(unwrappedProps.params)
+  const { id } = React.use(unwrappedProps.params);
 
-  return <EditAccountContent id={id} />
+  return <EditAccountContent id={id} />;
 }

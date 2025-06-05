@@ -1,26 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { getAccounts } from '@/api/accounts'
-import { getRoles } from '@/api/roles'
-import { updateAccountRole } from '@/api/accounts'
-import { Account } from '@/types/account'
-import { Role } from '@/types/role'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { ScrollArea } from '@/components/ui/scroll-area'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { getAccounts } from "@/api/accounts";
+import { getRoles } from "@/api/roles";
+import { updateAccountRole } from "@/api/accounts";
+import { Account } from "@/types/account";
+import { Role } from "@/types/role";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AssignRoleDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess?: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export default function AssignRoleDialog({
@@ -28,75 +28,81 @@ export default function AssignRoleDialog({
   onOpenChange,
   onSuccess,
 }: AssignRoleDialogProps) {
-  const [searchPhone, setSearchPhone] = useState('')
-  const [foundAccount, setFoundAccount] = useState<Account | null>(null)
-  const [roles, setRoles] = useState<Role[]>([])
-  const [selectedRole, setSelectedRole] = useState<string>('')
+  const [searchPhone, setSearchPhone] = useState("");
+  const [foundAccount, setFoundAccount] = useState<Account | null>(null);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>("");
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const rolesData = await getRoles()
-        setRoles(rolesData)
+        const rolesData = await getRoles();
+        setRoles(rolesData);
       } catch (error) {
-        console.error('Error fetching roles:', error)
-        toast.error('Không thể lấy danh sách quyền')
+        console.error("Error fetching roles:", error);
+        toast.error("Không thể lấy danh sách quyền");
       }
-    }
-    fetchRoles()
-  }, [])
+    };
+    fetchRoles();
+  }, []);
 
   // Reset states when dialog closes
   useEffect(() => {
     if (!open) {
-      setSearchPhone('')
-      setFoundAccount(null)
-      setSelectedRole('')
+      setSearchPhone("");
+      setFoundAccount(null);
+      setSelectedRole("");
     }
-  }, [open])
+  }, [open]);
 
   const handleSearch = async () => {
     if (!searchPhone.trim()) {
-      toast.error('Vui lòng nhập số điện thoại')
-      return
+      toast.error("Vui lòng nhập số điện thoại");
+      return;
     }
 
     try {
-      const accounts = await getAccounts()
+      const accounts = await getAccounts();
       const account = accounts.find(
         (acc: Account) => acc.mobile_no === searchPhone
-      )
+      );
 
       if (account) {
-        setFoundAccount(account)
-        setSelectedRole(account.role_id ? account.role_id.toString() : '')
+        setFoundAccount(account);
+        setSelectedRole(account.role_id ? account.role_id.toString() : "");
       } else {
-        toast.error('Không tìm thấy tài khoản với số điện thoại này')
-        setFoundAccount(null)
-        setSelectedRole('')
+        toast.error("Không tìm thấy tài khoản với số điện thoại này");
+        setFoundAccount(null);
+        setSelectedRole("");
       }
     } catch (error) {
-      console.error('Error searching account:', error)
-      toast.error('Lỗi khi tìm kiếm tài khoản')
+      console.error("Error searching account:", error);
+      toast.error("Lỗi khi tìm kiếm tài khoản");
     }
-  }
+  };
 
   const handleAssignRole = async () => {
     if (!foundAccount || !selectedRole) {
-      toast.error('Vui lòng chọn quyền cho tài khoản')
-      return
+      toast.error("Vui lòng chọn quyền cho tài khoản");
+      return;
     }
 
     try {
-      await updateAccountRole(foundAccount.id, parseInt(selectedRole))
-      toast.success('Cập nhật quyền thành công')
-      onOpenChange(false)
-      onSuccess?.()
+      await updateAccountRole(foundAccount.id, parseInt(selectedRole));
+      toast.success("Cập nhật quyền thành công", {
+        style: {
+          background: "oklch(44.8% 0.119 151.328)",
+          color: "#fff",
+        },
+        duration: 3000,
+      });
+      onOpenChange(false);
+      onSuccess?.();
     } catch (error) {
-      console.error('Error assigning roles:', error)
-      toast.error('Lỗi khi cập nhật quyền')
+      console.error("Error assigning roles:", error);
+      toast.error("Lỗi khi cập nhật quyền");
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,7 +129,7 @@ export default function AssignRoleDialog({
               <div className="text-sm">
                 <p className="font-medium">Thông tin tài khoản:</p>
                 <p>Số điện thoại: {foundAccount.mobile_no}</p>
-                <p>Quyền hiện tại: {foundAccount.role_name || 'Chưa có'}</p>
+                <p>Quyền hiện tại: {foundAccount.role_name || "Chưa có"}</p>
               </div>
 
               <div className="space-y-2">
@@ -158,7 +164,7 @@ export default function AssignRoleDialog({
               <Button
                 className="w-full bg-blue-500 text-white hover:bg-blue-600"
                 onClick={() => {
-                  handleAssignRole()
+                  handleAssignRole();
                 }}
               >
                 Cập nhật quyền
@@ -168,5 +174,5 @@ export default function AssignRoleDialog({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

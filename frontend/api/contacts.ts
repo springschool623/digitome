@@ -39,7 +39,8 @@ export const createContact = async (contact: Omit<Contact, 'id'>) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...contact,
-          military_postal_code: contact.military_postal_code, // chú ý tên field backend yêu cầu
+          military_phone_no: contact.military_phone_no, // chú ý tên field backend yêu cầu
+          civilian_phone_no: contact.civilian_phone_no, // chú ý tên field backend yêu cầu
         }),
       }
     )
@@ -48,6 +49,7 @@ export const createContact = async (contact: Omit<Contact, 'id'>) => {
     if (!res.ok) {
       toast.error('Thêm liên hệ thất bại!', {
         style: {
+          
           background: 'red', // Màu đỏ
           color: '#fff', // Chữ trắng
         },
@@ -142,7 +144,7 @@ export const addContacts = async (contacts: ContactImport[]) => {
 
     if (res.status === 201) {
       toast.success(`Nhập ${data.data.length} liên hệ thành công!`, {
-        style: { background: '#28a745', color: '#fff' },
+        style: { background: 'oklch(44.8% 0.119 151.328)', color: '#fff' },
         duration: 3000,
       })
     } else if (res.status === 207) {

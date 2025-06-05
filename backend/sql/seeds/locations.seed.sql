@@ -1,5 +1,5 @@
 TRUNCATE TABLE locations RESTART IDENTITY CASCADE;
 INSERT INTO Locations (id, name) VALUES
-(1, 'Bộ Tư lệnh Thành Phố'), (2, 'Bộ Tư lệnh Miền Đông'), (3, 'Bộ Tư lệnh Miền Tây'), (4, 'Bộ Tư lệnh Quân khu 9'),
-(5, 'Bộ Tư lệnh Thủ đô'), (6, 'Bộ Tư lệnh Biên Phòng'), (7, 'Bộ Tư lệnh Hải Quân'), (8, 'Bộ Tư lệnh Không Quân'),
-(9, 'Bộ Tư lệnh Tình báo'), (10, 'Bộ Tư lệnh Cơ Yếu');
+(1, 'Bộ Tư lệnh Thành Phố'), (2, 'Bộ Tham mưu'), (3, 'BCHQS quận 1'), (4, 'BCHQS quận 2'),
+(5, 'BCHQS quận 3'), (6, 'BCHQS quận 4'), (7, 'BCHQS quận 5'), (8, 'BCHQS quận 6'),
+(9, 'BCHQS quận 7'), (10, 'BCHQS quận 8'), (11, 'BCHQS quận 9'), (12, 'BCHQS quận 10');

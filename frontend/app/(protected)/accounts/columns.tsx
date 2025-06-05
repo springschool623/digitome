@@ -1,23 +1,23 @@
-'use client'
+"use client";
 
-import { Account } from '@/types/account'
-import { ColumnDef } from '@tanstack/react-table'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal } from 'lucide-react'
+import { Account } from "@/types/account";
+import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Checkbox } from '@/components/ui/checkbox'
-import { useState } from 'react'
-import { useUser } from '@/hooks/useUser'
-import Link from 'next/link'
-import { toast } from 'sonner'
-import { deleteAccount } from '@/api/accounts'
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
+import { useUser } from "@/hooks/useUser";
+import Link from "next/link";
+import { toast } from "sonner";
+import { deleteAccount } from "@/api/accounts";
 import {
   Dialog,
   DialogContent,
@@ -25,16 +25,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 
 const DeleteDialog = ({
   isOpen,
   onClose,
   onConfirm,
 }: {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,50 +56,50 @@ const DeleteDialog = ({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const ActionsCell = ({
   row,
   hasPermission,
   onStatusChange,
 }: {
-  row: { original: Account }
-  hasPermission: (permission: string) => boolean
-  onStatusChange: (id: number, newStatus: string) => void
+  row: { original: Account };
+  hasPermission: (permission: string) => boolean;
+  onStatusChange: (id: number, newStatus: string) => void;
 }) => {
-  const account = row.original
-  const currentUser = useUser()
-  const canEdit = hasPermission('EDIT_CONTACTS')
-  const canDelete = hasPermission('DELETE_CONTACTS')
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const account = row.original;
+  const currentUser = useUser();
+  const canEdit = hasPermission("EDIT_CONTACTS");
+  const canDelete = hasPermission("DELETE_CONTACTS");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Hide delete button if this is the current user's account
-  const showDeleteButton = canDelete && currentUser?.id !== account.id
+  const showDeleteButton = canDelete && currentUser?.id !== account.id;
 
   const handleDelete = async () => {
     try {
-      await deleteAccount(account.id)
-      toast.success('Vô hiệu hóa tài khoản thành công!', {
+      await deleteAccount(account.id);
+      toast.success("Vô hiệu hóa tài khoản thành công!", {
         style: {
-          backgroundColor: '#000',
-          color: '#fff',
+          background: "oklch(44.8% 0.119 151.328)",
+          color: "#fff",
         },
         duration: 3000,
-      })
-      setIsDeleteDialogOpen(false)
-      onStatusChange(account.id, 'suspended')
+      });
+      setIsDeleteDialogOpen(false);
+      onStatusChange(account.id, "suspended");
     } catch (error) {
-      console.error('Lỗi khi vô hiệu hóa:', error)
-      toast.error('Có lỗi xảy ra khi vô hiệu hóa tài khoản', {
+      console.error("Lỗi khi vô hiệu hóa:", error);
+      toast.error("Có lỗi xảy ra khi vô hiệu hóa tài khoản", {
         style: {
-          backgroundColor: '#000',
-          color: '#fff',
+          backgroundColor: "#000",
+          color: "#fff",
         },
         duration: 3000,
-      })
+      });
     }
-  }
+  };
 
   return (
     <>
@@ -142,21 +142,21 @@ const ActionsCell = ({
         />
       )}
     </>
-  )
-}
+  );
+};
 
 export const accountColumns = (
   hasPermission: (permission: string) => boolean,
   handleStatusChange: (id: number, newStatus: string) => void
 ): ColumnDef<Account>[] => [
   {
-    id: 'select',
+    id: "select",
     header: ({ table }) => (
       <div className="flex items-center justify-center">
         <Checkbox
           checked={
             table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
+            (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
@@ -176,23 +176,23 @@ export const accountColumns = (
     enableHiding: false,
   },
   {
-    accessorKey: 'id',
-    header: 'ID',
+    accessorKey: "id",
+    header: "ID",
   },
   {
-    accessorKey: 'mobile_no',
-    header: 'Số điện thoại',
+    accessorKey: "mobile_no",
+    header: "Số điện thoại",
   },
   {
-    accessorKey: 'password',
-    header: 'Mật khẩu',
+    accessorKey: "password",
+    header: "Mật khẩu",
     cell: () => <span className="italic text-muted-foreground">••••••••</span>, // Ẩn mật khẩu
   },
   {
-    accessorKey: 'role_name',
-    header: 'Quyền',
+    accessorKey: "role_name",
+    header: "Quyền",
     cell: ({ row }) => {
-      const role = row.original.role_name
+      const role = row.original.role_name;
       return (
         <div className="flex gap-1 uppercase">
           <Badge
@@ -203,50 +203,50 @@ export const accountColumns = (
             {role}
           </Badge>
         </div>
-      )
+      );
     },
   },
   {
-    accessorKey: 'updated_at',
-    header: 'Cập nhật lúc',
+    accessorKey: "updated_at",
+    header: "Cập nhật lúc",
     cell: ({ row }) => {
-      const date = new Date(row.getValue('updated_at'))
-      return date.toLocaleString('vi-VN')
+      const date = new Date(row.getValue("updated_at"));
+      return date.toLocaleString("vi-VN");
     },
   },
   {
-    accessorKey: 'created_by',
-    header: 'Tạo bởi',
+    accessorKey: "created_by",
+    header: "Tạo bởi",
   },
   {
-    accessorKey: 'status',
-    header: 'Trạng thái',
+    accessorKey: "status",
+    header: "Trạng thái",
     cell: ({ row }) => {
-      const status = row.getValue('status') as string
-      let colorClass = ''
+      const status = row.getValue("status") as string;
+      let colorClass = "";
       switch (status) {
-        case 'active':
-          colorClass = 'bg-green-800 text-white'
-          break
-        case 'suspended':
-          colorClass = 'bg-red-500 text-white'
-          break
-        case 'inactive':
-          colorClass = 'bg-gray-400 text-white'
-          break
+        case "active":
+          colorClass = "bg-green-800 text-white";
+          break;
+        case "suspended":
+          colorClass = "bg-red-500 text-white";
+          break;
+        case "inactive":
+          colorClass = "bg-gray-400 text-white";
+          break;
         default:
-          colorClass = 'bg-gray-200 text-black'
+          colorClass = "bg-gray-200 text-black";
       }
       return (
         <span className={`px-3 py-1 rounded-md capitalize ${colorClass}`}>
           {status}
         </span>
-      )
+      );
     },
   },
   {
-    id: 'actions',
-    header: 'Hành động',
+    id: "actions",
+    header: "Hành động",
     cell: ({ row }) => (
       <ActionsCell
         row={row}
@@ -255,4 +255,4 @@ export const accountColumns = (
       />
     ),
   },
-]
+];

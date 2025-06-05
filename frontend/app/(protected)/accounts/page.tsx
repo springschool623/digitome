@@ -1,106 +1,106 @@
-'use client'
+"use client";
 
-import { useEffect, useMemo, useState } from 'react'
-import { accountColumns } from './columns'
-import { roleColumns } from './roleColumns'
-import { DataTable } from './data-table'
-import { SidebarInset } from '@/components/ui/sidebar'
-import { Button } from '@/components/ui/button'
-import { Plus, RefreshCcw } from 'lucide-react'
-import Header from '@/components/PageHeader'
-import AddDialog from '@/components/AddDialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
-import { getAccounts } from '@/api/accounts'
-import { Account } from '@/types/account'
-import { Role } from '@/types/role'
-import { getRoles, createRole } from '@/api/roles'
-import { TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Tabs } from '@/components/ui/tabs'
-import { usePermission } from '@/hooks/usePermission'
-import AssignRoleDialog from '@/components/AssignRoleDialog'
+import { useEffect, useMemo, useState } from "react";
+import { accountColumns } from "./columns";
+import { roleColumns } from "./roleColumns";
+import { DataTable } from "./data-table";
+import { SidebarInset } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Plus, RefreshCcw } from "lucide-react";
+import Header from "@/components/PageHeader";
+import AddDialog from "@/components/AddDialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { getAccounts } from "@/api/accounts";
+import { Account } from "@/types/account";
+import { Role } from "@/types/role";
+import { getRoles, createRole } from "@/api/roles";
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs } from "@/components/ui/tabs";
+import { usePermission } from "@/hooks/usePermission";
+import AssignRoleDialog from "@/components/AssignRoleDialog";
 
 const breadcrumbs = [
-  { label: 'Dashboard', href: 'dashboard' },
-  { label: 'Danh mục chính' },
-  { label: 'Danh sách tài khoản' },
-]
+  { label: "Dashboard", href: "dashboard" },
+  { label: "Danh mục chính" },
+  { label: "Danh sách tài khoản" },
+];
 
-const initialNewRole: Omit<Role, 'id'> = {
-  role_name: '',
-  role_description: '',
-}
+const initialNewRole: Omit<Role, "id"> = {
+  role_name: "",
+  role_description: "",
+};
 
 export default function AccountPage() {
-  const { hasPermission } = usePermission()
-  const [search, setSearch] = useState('')
-  const [accounts, setAccounts] = useState<Account[]>([])
-  const [newRole, setNewRole] = useState<Omit<Role, 'id'>>(initialNewRole)
-  const [openAddRoleDialog, setOpenAddRoleDialog] = useState(false)
-  const [openAssignRoleDialog, setOpenAssignRoleDialog] = useState(false)
-  const [roles, setRoles] = useState<Role[]>([])
+  const { hasPermission } = usePermission();
+  const [search, setSearch] = useState("");
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [newRole, setNewRole] = useState<Omit<Role, "id">>(initialNewRole);
+  const [openAddRoleDialog, setOpenAddRoleDialog] = useState(false);
+  const [openAssignRoleDialog, setOpenAssignRoleDialog] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
 
   const refreshAccounts = async () => {
     try {
-      const accounts_data = await getAccounts()
-      setAccounts(accounts_data)
+      const accounts_data = await getAccounts();
+      setAccounts(accounts_data);
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách người dùng:', error)
+      console.error("Lỗi khi lấy danh sách người dùng:", error);
     }
-  }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const accounts_data = await getAccounts()
-        const roles_data = await getRoles()
-        setAccounts(accounts_data)
-        setRoles(roles_data)
+        const accounts_data = await getAccounts();
+        const roles_data = await getRoles();
+        setAccounts(accounts_data);
+        setRoles(roles_data);
       } catch (error) {
-        console.error('Lỗi khi lấy danh sách người dùng:', error)
+        console.error("Lỗi khi lấy danh sách người dùng:", error);
       }
-    }
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const updateNewRole = (field: keyof typeof newRole, value: string) => {
-    setNewRole((prev) => ({ ...prev, [field]: value }))
-  }
+    setNewRole((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleStatusChange = (id: number, newStatus: string) => {
     setAccounts((prev) =>
       prev.map((acc) => (acc.id === id ? { ...acc, status: newStatus } : acc))
-    )
-  }
+    );
+  };
 
   const handleCreateRole = async () => {
     if (!newRole.role_name.trim()) {
-      toast.error('Tên quyền là bắt buộc!', {
-        style: { background: 'red', color: '#fff' },
+      toast.error("Tên quyền là bắt buộc!", {
+        style: { background: "red", color: "#fff" },
         duration: 3000,
-      })
-      return
+      });
+      return;
     }
 
     try {
-      const data = await createRole(newRole)
-      setRoles((prev) => [...prev, data])
-      setNewRole(initialNewRole)
-      toast.success('Thêm quyền thành công!', {
-        style: { background: '#28a745', color: '#fff' },
+      const data = await createRole(newRole);
+      setRoles((prev) => [...prev, data]);
+      setNewRole(initialNewRole);
+      toast.success("Thêm quyền thành công!", {
+        style: { background: "oklch(44.8% 0.119 151.328)", color: "#fff" },
         duration: 3000,
-      })
-      setOpenAddRoleDialog(false)
+      });
+      setOpenAddRoleDialog(false);
     } catch (error) {
-      console.error('Lỗi khi thêm quyền:', error)
-      toast.error('Đã xảy ra lỗi khi thêm quyền!', {
-        style: { background: 'red', color: '#fff' },
+      console.error("Lỗi khi thêm quyền:", error);
+      toast.error("Đã xảy ra lỗi khi thêm quyền!", {
+        style: { background: "red", color: "#fff" },
         duration: 3000,
-      })
+      });
     }
-  }
+  };
 
   const getFilteredAccounts = useMemo(() => {
     return accounts.filter((c) =>
@@ -108,8 +108,8 @@ export default function AccountPage() {
         .filter(Boolean)
         .map(String)
         .some((val) => val.toLowerCase().includes(search.toLowerCase()))
-    )
-  }, [accounts, search])
+    );
+  }, [accounts, search]);
 
   return (
     <SidebarInset>
@@ -128,7 +128,7 @@ export default function AccountPage() {
               className="w-80"
             />
             <div className="flex gap-2">
-              {hasPermission('ASSIGN_ROLES') && accounts[0] && (
+              {hasPermission("ASSIGN_ROLES") && accounts[0] && (
                 <Button
                   variant="outline"
                   className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
@@ -138,7 +138,7 @@ export default function AccountPage() {
                   Cấp quyền tài khoản
                 </Button>
               )}
-              {hasPermission('CREATE_ROLES') && (
+              {hasPermission("CREATE_ROLES") && (
                 <AddDialog
                   title="Thêm quyền mới"
                   open={openAddRoleDialog}
@@ -169,7 +169,7 @@ export default function AccountPage() {
                         placeholder="Nhập tên quyền..."
                         value={newRole.role_name}
                         onChange={(e) =>
-                          updateNewRole('role_name', e.target.value)
+                          updateNewRole("role_name", e.target.value)
                         }
                       />
                     </div>
@@ -180,7 +180,7 @@ export default function AccountPage() {
                         placeholder="Nhập mô tả..."
                         value={newRole.role_description}
                         onChange={(e) =>
-                          updateNewRole('role_description', e.target.value)
+                          updateNewRole("role_description", e.target.value)
                         }
                       />
                     </div>
@@ -190,7 +190,7 @@ export default function AccountPage() {
             </div>
           </div>
           <TabsContent value="accounts">
-            {hasPermission('VIEW_ACCOUNTS') ? (
+            {hasPermission("VIEW_ACCOUNTS") ? (
               <DataTable
                 columns={accountColumns(hasPermission, handleStatusChange)}
                 data={getFilteredAccounts}
@@ -202,7 +202,7 @@ export default function AccountPage() {
             )}
           </TabsContent>
           <TabsContent value="roles">
-            {hasPermission('VIEW_ROLES') ? (
+            {hasPermission("VIEW_ROLES") ? (
               <DataTable columns={roleColumns} data={roles} />
             ) : (
               <div className="text-center py-8 text-muted-foreground">
@@ -218,5 +218,5 @@ export default function AccountPage() {
         onSuccess={refreshAccounts}
       />
     </SidebarInset>
-  )
+  );
 }

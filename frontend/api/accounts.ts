@@ -101,7 +101,7 @@ export const deleteAccount = async (id: number) => {
     }
 
     toast.success('Tài khoản đã bị vô hiệu hóa!', {
-      style: { background: 'black', color: '#fff' },
+      style: { background: 'oklch(44.8% 0.119 151.328)', color: '#fff' },
       duration: 3000,
     })
 

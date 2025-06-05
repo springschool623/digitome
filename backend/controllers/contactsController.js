@@ -47,29 +47,31 @@ export const createContact = async (req, res) => {
   const {
     rank_id,
     position_id,
-    manager,
+    name,
     department_id,
     location_id,
     address,
-    military_postal_code,
+    military_phone_no,
+    civilian_phone_no,
     mobile_no,
   } = req.body
 
   try {
     const result = await pool.query(
       `INSERT INTO contacts (
-        rank_id, position_id, manager, department_id, location_id, 
-        address, military_postal_code, mobile_no
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+        rank_id, position_id, name, department_id, location_id, 
+        address, military_phone_no, civilian_phone_no, mobile_no
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
       RETURNING *`,
       [
         rank_id,
         position_id,
-        manager,
+        name,
         department_id,
         location_id,
         address,
-        military_postal_code,
+        military_phone_no,
+        civilian_phone_no,
         mobile_no,
       ]
     )
@@ -92,11 +94,12 @@ export const updateContact = async (req, res) => {
   const {
     rank_id,
     position_id,
-    manager,
+    name,
     department_id,
     location_id,
     address,
-    military_postal_code,
+    military_phone_no,
+    civilian_phone_no,
     mobile_no,
   } = req.body
 
@@ -105,22 +108,24 @@ export const updateContact = async (req, res) => {
       `UPDATE contacts 
        SET rank_id = $1, 
            position_id = $2, 
-           manager = $3, 
+           name = $3, 
            department_id = $4, 
            location_id = $5, 
            address = $6,
-           military_postal_code = $7, 
-           mobile_no = $8
-       WHERE id = $9 
+           military_phone_no = $7, 
+           civilian_phone_no = $8,
+           mobile_no = $9
+       WHERE id = $10 
        RETURNING *`,
       [
         rank_id,
         position_id,
-        manager,
+        name,
         department_id,
         location_id,
         address,
-        military_postal_code,
+        military_phone_no,
+        civilian_phone_no,
         mobile_no,
         id,
       ]
@@ -337,18 +342,19 @@ export const importContacts = async (req, res) => {
         // Ví dụ phần insert:
         const result = await pool.query(
           `INSERT INTO contacts (
-            rank_id, position_id, manager, department_id, 
-            location_id, address, military_postal_code, mobile_no
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+            rank_id, position_id, name, department_id, 
+            location_id, address, military_phone_no, civilian_phone_no, mobile_no
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
           RETURNING *`,
           [
             rankId,
             positionId,
-            contact.manager,
+            contact.name,
             departmentId,
             locationId,
             contact.address,
-            contact.military_postal_code,
+            contact.military_phone_no,
+            contact.civilian_phone_no,
             contact.mobile_no,
           ]
         );

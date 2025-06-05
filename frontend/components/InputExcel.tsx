@@ -59,12 +59,12 @@ export default function InputExcel({ onImport }: InputExcelProps) {
         ).map((row) => ({
           rank_name: row.rank_name || row["Cấp bậc"] || "",
           position_name: row.position_name || row["Chức vụ"] || "",
-          manager: row.manager || row["Họ tên"] || "",
+          name: row.name || row["Họ tên"] || "",
           department_name: row.department_name || row["Phòng/Ban"] || "",
           location_name: row.location_name || row["Đơn vị"] || "",
           address: row.address || row["Địa chỉ"] || "",
-          military_postal_code:
-            row.military_postal_code || row["Mã BĐQS"] || "",
+          military_phone_no: row.military_phone_no || row["Số quân sự"] || "",
+          civilian_phone_no: row.civilian_phone_no || row["Số dân sự"] || "",
           mobile_no: row.mobile_no || row["Số điện thoại"] || "",
         }));
 
@@ -73,7 +73,7 @@ export default function InputExcel({ onImport }: InputExcelProps) {
         //   return;
         // }
 
-        if (importedContacts.every((c) => !c.manager)) {
+        if (importedContacts.every((c) => !c.name)) {
           toast.error("Không có liên hệ nào hợp lệ (thiếu Họ tên).", {
             style: {
               background: "red",
@@ -94,7 +94,7 @@ export default function InputExcel({ onImport }: InputExcelProps) {
             //   `Nhập thành công ${importedContacts.length} liên hệ.`,
             //   {
             //     style: {
-            //       background: "#28a745",
+            //       background: "oklch(44.8% 0.119 151.328)",
             //       color: "#fff",
             //     },
             //     duration: 3000,

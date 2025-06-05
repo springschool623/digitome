@@ -62,7 +62,7 @@ export const login = async (
     }
 
     toast.success('Đăng nhập thành công!', {
-      style: { background: '#28a745', color: '#fff' },
+      style: { background: 'oklch(44.8% 0.119 151.328)', color: '#fff' },
       duration: 3000,
     })
 
