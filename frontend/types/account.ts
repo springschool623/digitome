@@ -1,5 +1,3 @@
-import { Role } from './role'
-
 export type Account = {
   id: number
   mobile_no: string
@@ -8,5 +6,6 @@ export type Account = {
   created_by?: number
   created_by_name?: string
   updated_at?: string
-  roles?: Role[]
+  role_id?: number
+  role_name?: string
 }

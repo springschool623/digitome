@@ -12,8 +12,7 @@ export const getAllAccounts = async (req, res) => {
       SELECT a.id, a.mobile_no, r.role_name, a.updated_at, 
              a.created_by, a.status, c.manager as created_by_name
       FROM accounts a 
-      JOIN account_role ar ON a.id = ar.account_id
-      JOIN roles r ON ar.role_id = r.id
+      JOIN roles r ON a.role_id = r.id
       LEFT JOIN contacts c ON a.created_by = c.id
       ORDER BY a.id ASC
     `)
@@ -30,9 +29,8 @@ export const getAccount = async (req, res) => {
     const result = await pool.query(
       `
       SELECT a.*, r.role_name, c.manager as created_by_name
-      FROM accounts a
-      JOIN account_role ar ON a.id = ar.account_id
-      JOIN roles r ON ar.role_id = r.id
+      FROM accounts a 
+      JOIN roles r ON a.role_id = r.id
       LEFT JOIN contacts c ON a.created_by = c.id
       WHERE a.id = $1
     `,
@@ -205,63 +203,5 @@ export const updateAccountStatus = async (req, res) => {
     res.json(result.rows[0])
   } catch (error) {
     res.status(500).json({ error: 'Failed to update account status' })
-  }
-}
-
-// Cập nhật quyền tài khoản
-export const updateAccountRole = async (req, res) => {
-  const { id } = req.params
-  const { role_id } = req.body
-
-  try {
-    const result = await pool.query(
-      `UPDATE account_role SET role_id = $1 WHERE account_id = $2 RETURNING *`,
-      [role_id, id]
-    )
-    res.status(200).json(result.rows[0])
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update account role' })
-  }
-}
-
-// Thêm hàng loạt quyền cho tài khoản
-export const addRolesToAccount = async (req, res) => {
-  const { account_id, role_ids } = req.body
-  console.log('Received data (addRoles):', { account_id, role_ids })
-
-  try {
-    const results = []
-    for (const role_id of role_ids) {
-      const result = await pool.query(
-        `INSERT INTO account_role (account_id, role_id) VALUES ($1, $2) RETURNING *`,
-        [account_id, role_id]
-      )
-      results.push(result.rows[0])
-    }
-    res.status(201).json(results)
-  } catch (error) {
-    console.error('Error in addRolesToAccount:', error)
-    res.status(500).json({ error: 'Failed to add roles to account' })
-  }
-}
-
-// Xóa hàng loạt quyền tài khoản
-export const removeRolesFromAccount = async (req, res) => {
-  const { account_id, role_ids } = req.body
-  console.log('Received data (removeRoles):', { account_id, role_ids })
-
-  try {
-    const results = []
-    for (const role_id of role_ids) {
-      const result = await pool.query(
-        `DELETE FROM account_role WHERE account_id = $1 AND role_id = $2 RETURNING *`,
-        [account_id, role_id]
-      )
-      results.push(result.rows[0])
-    }
-    res.status(200).json(results)
-  } catch (error) {
-    console.error('Error in removeRolesFromAccount:', error)
-    res.status(500).json({ error: 'Failed to remove roles from account' })
   }
 }

@@ -52,7 +52,6 @@ function EditAccountContent({ id }: { id: string }) {
   const [roles, setRoles] = useState<{ id: number; role_name: string }[]>([])
   const [displayNames, setDisplayNames] = useState<Record<string, string>>({
     role_name: '',
-    status_name: '',
   })
   const currentUser = useUser()
   const isCurrentUser = currentUser?.id === account?.id
@@ -90,14 +89,6 @@ function EditAccountContent({ id }: { id: string }) {
       // Update role name
       const role = roles.find((r) => r.id === Number(account.role_id))
       if (role) newDisplayNames.role_name = role.role_name
-
-      // Update status name
-      const statusMap: Record<string, string> = {
-        active: 'Hoạt động',
-        inactive: 'Không hoạt động',
-        suspended: 'Tạm ngưng',
-      }
-      newDisplayNames.status_name = statusMap[account.status] || account.status
 
       setDisplayNames(newDisplayNames)
     }
@@ -246,10 +237,10 @@ function EditAccountContent({ id }: { id: string }) {
                             <SelectContent>
                               <SelectItem value="active">Hoạt động</SelectItem>
                               <SelectItem value="inactive">
-                                Không hoạt động
+                                Ngưng hoạt động
                               </SelectItem>
                               <SelectItem value="suspended">
-                                Tạm ngưng
+                                Vô hiệu hóa
                               </SelectItem>
                             </SelectContent>
                           </Select>

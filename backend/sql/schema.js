@@ -20,7 +20,6 @@ const TABLE_ORDER = [
   'role_permission.sql',
   'contacts.sql',
   'accounts.sql',
-  'account_role.sql',
   'logs.sql',
   'archived_contacts.sql',
   'indexes.sql',

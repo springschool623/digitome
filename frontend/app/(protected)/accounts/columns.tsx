@@ -192,14 +192,16 @@ export const accountColumns = (
     accessorKey: 'role_name',
     header: 'Quyền',
     cell: ({ row }) => {
-      const roles = row.original.roles || []
+      const role = row.original.role_name
       return (
-        <div className="flex gap-1">
-          {roles.map((role) => (
-            <Badge key={role.id} variant="secondary">
-              {role.role_name}
-            </Badge>
-          ))}
+        <div className="flex gap-1 uppercase">
+          <Badge
+            key={role}
+            variant="secondary"
+            className="py-1 px-2 rounded-md bg-violet-500 text-white"
+          >
+            {role}
+          </Badge>
         </div>
       )
     },
@@ -236,7 +238,7 @@ export const accountColumns = (
           colorClass = 'bg-gray-200 text-black'
       }
       return (
-        <span className={`px-4 py-2 rounded-full capitalize ${colorClass}`}>
+        <span className={`px-3 py-1 rounded-md capitalize ${colorClass}`}>
           {status}
         </span>
       )
