@@ -7,6 +7,7 @@ export interface LoginResponse {
     id: number
     mobile_no: string
     role: string
+    user_name: string
   }
   token: string
 }
@@ -26,6 +27,7 @@ export const login = async (
     )
 
     const data = await response.json()
+    console.log(data)
 
     if (response.status === 401) {
       toast.error(data.error || 'Thông tin đăng nhập không đúng!', {

@@ -198,7 +198,7 @@ export const accountColumns = (
           <Badge
             key={role}
             variant="secondary"
-            className="py-1 px-2 rounded-md bg-violet-500 text-white"
+            className="py-1 px-2 rounded-md bg-yellow-700 text-white"
           >
             {role}
           </Badge>
@@ -226,7 +226,7 @@ export const accountColumns = (
       let colorClass = ''
       switch (status) {
         case 'active':
-          colorClass = 'bg-green-500 text-white'
+          colorClass = 'bg-green-800 text-white'
           break
         case 'suspended':
           colorClass = 'bg-red-500 text-white'

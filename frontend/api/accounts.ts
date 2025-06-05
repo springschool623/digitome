@@ -21,6 +21,7 @@ export const getAccounts = async () => {
     )
 
     const data = await res.json()
+    console.log(data)
 
     if (!res.ok) {
       // Xử lý lỗi cụ thể dựa trên mã lỗi hoặc thông báo từ server
@@ -138,6 +139,25 @@ export const updateAccount = async (id: number, account: Account) => {
     return await res.json()
   } catch (error) {
     console.error('Lỗi khi cập nhật tài khoản:', error)
+    throw error
+  }
+}
+
+export const updateAccountRole = async (accountId: number, roleId: number) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_DB_DOMAIN}/api/accounts/${accountId}/role`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roleId }),
+      }
+    )
+
+    if (!res.ok) throw new Error('Failed to update account roles')
+    return await res.json()
+  } catch (error) {
+    console.error('Lỗi khi cập nhật quyền tài khoản:', error)
     throw error
   }
 }

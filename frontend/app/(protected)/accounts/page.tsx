@@ -19,6 +19,7 @@ import { getRoles, createRole } from '@/api/roles'
 import { TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tabs } from '@/components/ui/tabs'
 import { usePermission } from '@/hooks/usePermission'
+import AssignRoleDialog from '@/components/AssignRoleDialog'
 
 const breadcrumbs = [
   { label: 'Dashboard', href: 'dashboard' },
@@ -37,7 +38,17 @@ export default function AccountPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [newRole, setNewRole] = useState<Omit<Role, 'id'>>(initialNewRole)
   const [openAddRoleDialog, setOpenAddRoleDialog] = useState(false)
+  const [openAssignRoleDialog, setOpenAssignRoleDialog] = useState(false)
   const [roles, setRoles] = useState<Role[]>([])
+
+  const refreshAccounts = async () => {
+    try {
+      const accounts_data = await getAccounts()
+      setAccounts(accounts_data)
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách người dùng:', error)
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,6 +132,7 @@ export default function AccountPage() {
                 <Button
                   variant="outline"
                   className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
+                  onClick={() => setOpenAssignRoleDialog(true)}
                 >
                   <Plus />
                   Cấp quyền tài khoản
@@ -200,6 +212,11 @@ export default function AccountPage() {
           </TabsContent>
         </div>
       </Tabs>
+      <AssignRoleDialog
+        open={openAssignRoleDialog}
+        onOpenChange={setOpenAssignRoleDialog}
+        onSuccess={refreshAccounts}
+      />
     </SidebarInset>
   )
 }

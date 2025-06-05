@@ -9,7 +9,7 @@ const SECRET_KEY = process.env.JWT_SECRET_KEY
 export const getAllAccounts = async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT a.id, a.mobile_no, r.role_name, a.updated_at, 
+      SELECT a.id, a.mobile_no, a.role_id, r.role_name, a.updated_at, 
              a.created_by, a.status, c.manager as created_by_name
       FROM accounts a 
       JOIN roles r ON a.role_id = r.id
@@ -28,7 +28,7 @@ export const getAccount = async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT a.*, r.role_name, c.manager as created_by_name
+      SELECT a.*, r.role_name, c.manager as created_by_name, a.role_id
       FROM accounts a 
       JOIN roles r ON a.role_id = r.id
       LEFT JOIN contacts c ON a.created_by = c.id
@@ -113,10 +113,10 @@ export const loginAccount = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT a.*, r.role_name 
+      `SELECT a.*, r.role_name, c.manager
        FROM accounts a
-       JOIN account_role ar ON a.id = ar.account_id
-       JOIN roles r ON ar.role_id = r.id 
+       JOIN roles r ON a.role_id = r.id 
+       JOIN contacts c ON a.mobile_no = c.mobile_no
        WHERE a.mobile_no = $1`,
       [mobile_no]
     )
@@ -143,6 +143,7 @@ export const loginAccount = async (req, res) => {
         id: user.id,
         mobile_no: user.mobile_no,
         role: user.role_name,
+        user_name: user.manager,
       },
       SECRET_KEY,
       { expiresIn: '1h' }
@@ -156,6 +157,7 @@ export const loginAccount = async (req, res) => {
         id: user.id,
         mobile_no: user.mobile_no,
         role: user.role_name,
+        user_name: user.manager,
       },
     })
   } catch (error) {
@@ -203,5 +205,20 @@ export const updateAccountStatus = async (req, res) => {
     res.json(result.rows[0])
   } catch (error) {
     res.status(500).json({ error: 'Failed to update account status' })
+  }
+}
+
+export const updateAccountRole = async (req, res) => {
+  const { id } = req.params
+  const { roleId } = req.body
+
+  try {
+    const result = await pool.query(
+      `UPDATE accounts SET role_id = $1 WHERE id = $2 RETURNING *`,
+      [roleId, id]
+    )
+    res.json(result.rows[0])
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update role to account' })
   }
 }

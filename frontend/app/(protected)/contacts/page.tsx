@@ -343,7 +343,7 @@ function ContactsContent() {
         <div className="flex items-center gap-4">
           {hasPermission('EDIT_CONTACTS') && (
             <Button
-              className="bg-green-500 text-white hover:bg-green-600"
+              variant="addButton"
               onClick={() => router.push('/contacts/create')}
             >
               Thêm mới

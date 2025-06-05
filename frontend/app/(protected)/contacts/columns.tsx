@@ -488,8 +488,7 @@ export const contactColumns = (
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost"
-          className="uppercase"
+          variant="tableButton"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Cấp bậc
@@ -521,8 +520,7 @@ export const contactColumns = (
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost"
-          className="uppercase"
+          variant="tableButton"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Chức vụ
