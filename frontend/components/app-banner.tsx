@@ -12,8 +12,8 @@ export function AppBanner() {
           height={100}
           className=" object-contain"
         />
-        <h2 className="text-xl font-semibold text-white">
-          Phần mềm quản lý danh bạ và địa chỉ đơn vị LLVT TP
+        <h2 className="text-2xl font-semibold text-white">
+          Phần mềm Quản lý danh bạ và địa chỉ đơn vị LLVT Thành phố Hồ Chí Minh
         </h2>
       </div>
     </div>
