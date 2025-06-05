@@ -15,7 +15,7 @@ interface Log {
   type: LogType
   message: string
   timestamp: Date
-  metadata?: Record<string, string | number>
+  metadata?: Record<string, unknown>
 }
 
 export function LogPanel() {
@@ -29,24 +29,49 @@ export function LogPanel() {
       const mockLogs: Log[] = [
         {
           id: '1',
-          type: 'debug',
-          message: 'Component mounted',
+          type: 'audit',
+          message: 'User updated profile',
           timestamp: new Date(),
-          metadata: { component: 'LogPanel' },
+          metadata: {
+            actor_id: 101,
+            action: 'create',
+            target_table: 'contacts',
+            target_id: 55,
+            data: {
+              name: 'Nguyen Van A',
+              email: 'a@example.com',
+              phone: '0909090909',
+            },
+            created_at: '2024-06-01 10:00:00',
+          },
         },
         {
           id: '2',
           type: 'audit',
-          message: 'User updated account settings',
+          message: 'Admin deleted post',
           timestamp: new Date(),
-          metadata: { userId: 123, action: 'update' },
+          metadata: {
+            actor_id: 1,
+            action: 'delete',
+            target_table: 'posts',
+            target_id: 99,
+            data: { title: 'Hello world' },
+            created_at: '2024-06-01 11:00:00',
+          },
         },
         {
           id: '3',
           type: 'error',
           message: 'Failed to fetch data',
           timestamp: new Date(),
-          metadata: { error: 'Network error' },
+          metadata: {
+            actor_id: 2,
+            action: 'delete',
+            target_table: 'accounts',
+            target_id: 77,
+            data: { error: 'Network error' },
+            created_at: '2024-06-01 12:00:00',
+          },
         },
       ]
       setLogs(mockLogs)
@@ -71,7 +96,7 @@ export function LogPanel() {
   const filteredLogs = logs.filter((log) => log.type === activeTab)
 
   return (
-    <Card className="mt-4">
+    <Card className="m-4">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">Log Panel</CardTitle>
       </CardHeader>
@@ -117,9 +142,33 @@ export function LogPanel() {
                     </div>
                     <p className="text-sm">{log.message}</p>
                     {log.metadata && (
-                      <pre className="text-xs text-muted-foreground bg-muted p-2 rounded-md overflow-x-auto">
-                        {JSON.stringify(log.metadata, null, 2)}
-                      </pre>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full text-xs text-left border border-muted rounded-md">
+                          <thead>
+                            <tr>
+                              {Object.keys(log.metadata).map((key) => (
+                                <th
+                                  key={key}
+                                  className="px-2 py-1 font-semibold bg-muted text-muted-foreground border-b"
+                                >
+                                  {key}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              {Object.values(log.metadata).map((value, idx) => (
+                                <td key={idx} className="px-2 py-1 border-b">
+                                  {typeof value === 'object'
+                                    ? JSON.stringify(value)
+                                    : String(value)}
+                                </td>
+                              ))}
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     )}
                   </div>
                 ))}

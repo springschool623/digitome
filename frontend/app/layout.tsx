@@ -30,10 +30,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SidebarProvider>
-          {children}
-          {/* <LogPanel /> */}
-        </SidebarProvider>
+        <SidebarProvider>{children}</SidebarProvider>
         <Toaster position="bottom-right" />
       </body>
     </html>

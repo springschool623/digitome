@@ -1,4 +1,6 @@
 import { AppSidebar } from '@/components/app-sidebar'
+import { AppBanner } from '@/components/app-banner'
+// import { LogPanel } from '@/components/LogPanel'
 
 export default function ProtectedLayout({
   children,
@@ -8,7 +10,11 @@ export default function ProtectedLayout({
   return (
     <>
       <AppSidebar />
-      {children}
+      <div className="flex-1 flex flex-col">
+        <AppBanner />
+        {children}
+        {/* <LogPanel /> */}
+      </div>
     </>
   )
 }

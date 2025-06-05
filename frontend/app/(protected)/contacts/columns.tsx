@@ -557,18 +557,20 @@ export const contactColumns = (
     accessorKey: 'manager',
     header: 'Họ tên',
     cell: ({ row, column }) => (
-      <EditableCell
-        value={row.getValue(column.id)}
-        row={row}
-        column={column}
-        onSave={async (id, field, value) => {
-          const contact = row.original
-          await updateContact(id, { ...contact, [field]: value })
-          toast.success('Cập nhật thành công!')
-        }}
-        onUpdate={onUpdateContact}
-        isEnabled={isInlineEditEnabled}
-      />
+      <div className="min-w-[180px] w-[200px]">
+        <EditableCell
+          value={row.getValue(column.id)}
+          row={row}
+          column={column}
+          onSave={async (id, field, value) => {
+            const contact = row.original
+            await updateContact(id, { ...contact, [field]: value })
+            toast.success('Cập nhật thành công!')
+          }}
+          onUpdate={onUpdateContact}
+          isEnabled={isInlineEditEnabled}
+        />
+      </div>
     ),
   },
   {

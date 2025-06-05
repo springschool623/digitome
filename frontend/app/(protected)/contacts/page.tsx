@@ -44,13 +44,14 @@ function ContactsContent() {
   const { hasPermission } = usePermission()
   const router = useRouter()
   const { ranks, positions, departments, locations } = useContact()
+  // const [setPendingEdits] = useState<Record<number, Partial<Contact>>>({})
 
   const fetchContacts = async () => {
     try {
       const data = await getContacts()
       setContacts(data)
-    } catch (error) {
-      console.error('Lỗi khi lấy danh bạ:', error)
+    } catch {
+      console.error('Lỗi khi lấy danh bạ:')
     }
   }
 
@@ -71,7 +72,44 @@ function ContactsContent() {
         contact.id === updatedContact.id ? updatedContact : contact
       )
     )
+    // setPendingEdits((prev) => ({
+    //   ...prev,
+    //   [updatedContact.id]: {
+    //     ...(prev[updatedContact.id] || {}),
+    //     ...updatedContact,
+    //   },
+    // }))
   }
+
+  // const handleSaveAll = async () => {
+  //   const editIds = Object.keys(pendingEdits)
+  //   if (editIds.length === 0) {
+  //     toast.info('Không có thay đổi nào để lưu!')
+  //     return
+  //   }
+  //   try {
+  //     await Promise.all(
+  //       editIds.map(async (id) => {
+  //         const edit = pendingEdits[Number(id)]
+  //         if (edit) {
+  //           const original = contacts.find((c) => c.id === Number(id))
+  //           if (original) {
+  //             await updateContact(Number(id), {
+  //               ...original,
+  //               ...edit,
+  //               id: Number(id),
+  //             })
+  //           }
+  //         }
+  //       })
+  //     )
+  //     toast.success('Đã lưu tất cả thay đổi!')
+  //     setPendingEdits({})
+  //     fetchContacts()
+  //   } catch {
+  //     toast.error('Có lỗi khi lưu thay đổi!')
+  //   }
+  // }
 
   const getFilteredContacts = useMemo(() => {
     return contacts
@@ -268,27 +306,37 @@ function ContactsContent() {
             ))}
           </FilterDialog>
           {hasPermission('EDIT_CONTACTS') && (
-            <Button
-              variant={isInlineEditEnabled ? 'default' : 'outline'}
-              onClick={() => setIsInlineEditEnabled(!isInlineEditEnabled)}
-              className={
-                isInlineEditEnabled
-                  ? 'bg-green-700 text-white hover:bg-green-800'
-                  : ''
-              }
-            >
-              {isInlineEditEnabled ? (
-                <>
-                  <Check className="mr-2 h-4 w-4" />
-                  Inline Edit
-                </>
-              ) : (
-                <>
-                  <Edit2 className="mr-2 h-4 w-4" />
-                  Inline Edit
-                </>
-              )}
-            </Button>
+            <>
+              <Button
+                variant={isInlineEditEnabled ? 'default' : 'outline'}
+                onClick={() => setIsInlineEditEnabled(!isInlineEditEnabled)}
+                className={
+                  isInlineEditEnabled
+                    ? 'bg-green-700 text-white hover:bg-green-800'
+                    : ''
+                }
+              >
+                {isInlineEditEnabled ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Inline Edit
+                  </>
+                ) : (
+                  <>
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    Inline Edit
+                  </>
+                )}
+              </Button>
+              {/* {isInlineEditEnabled && (
+                <Button
+                  className="bg-blue-600 text-white hover:bg-blue-700 ml-2"
+                  onClick={handleSaveAll}
+                >
+                  Lưu tất cả
+                </Button>
+              )} */}
+            </>
           )}
         </div>
 
